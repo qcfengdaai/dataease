@@ -104,6 +104,315 @@ curl -sSL https://dataease.oss-cn-hangzhou.aliyuncs.com/quick_start_v2.sh | bash
 -   数据处理：[Apache Calcite](https://github.com/apache/calcite/)、[Apache SeaTunnel](https://github.com/apache/seatunnel)
 -   基础设施：[Docker](https://www.docker.com/)
 
+## 开发者文档
+
+### 架构文档
+
+- **[CLAUDE.md](./CLAUDE.md)** - 开发规范和构建指南(用于 Claude Code 辅助开发)
+- **[PROJECT.md](./PROJECT.md)** - 系统架构设计文档
+- **[core/CLAUDE.md](./core/CLAUDE.md)** - Core 模块开发规范
+- **[core/PROJECT.md](./core/PROJECT.md)** - Core 模块架构文档
+
+### 项目结构
+
+DataEase 采用模块化架构,主要分为两大部分:
+
+```
+dataease/
+├── sdk/              # 基础设施层(SDK)
+│   ├── common/       # 公共组件和工具
+│   ├── api/          # API 接口定义层
+│   ├── extensions/   # 扩展点定义
+│   └── distributed/  # 分布式组件(企业版)
+│
+└── core/             # 业务实现层
+    ├── core-backend/   # Spring Boot 后端
+    └── core-frontend/  # Vue 3 前端
+```
+
+### 模块依赖关系
+
+```
+core-backend (业务逻辑)
+    ↓ 依赖
+sdk/api/* (API 接口)
+    ↓ 依赖
+sdk/common (公共组件)
+    ↓ 依赖
+sdk/extensions/* (扩展点)
+```
+
+**依赖说明**:
+- **sdk 模块**: 提供基础设施、公共工具、API 定义和扩展点
+- **core 模块**: 实现具体的业务逻辑,依赖 sdk 模块
+- **构建顺序**: 必须先构建 sdk,再构建 core
+
+### 本地开发环境搭建
+
+#### 环境要求
+
+- **Java 21+** (必须)
+- **Node.js 16+** (推荐 18+)
+- **Maven 3.6+**
+- **MySQL 8.0+** (可选,开发环境可使用 H2)
+
+#### 快速启动
+
+**方式一: 分别启动前后端(推荐用于开发)**
+
+```bash
+# 1. 构建 SDK 模块
+cd sdk
+mvn clean install
+
+# 2. 启动后端 (使用 H2 数据库)
+cd ../core/core-backend
+mvn spring-boot:run
+
+# 3. 启动前端 (新终端)
+cd ../core-frontend
+npm install
+npm run dev
+
+# 访问: http://localhost:5173
+# 默认账号: admin / DataEase@123456
+```
+
+**方式二: 完整打包运行**
+
+```bash
+# 1. 构建前端
+cd core/core-frontend
+npm install
+npm run build:base
+
+# 2. 构建完整应用
+cd ../..
+mvn clean package
+
+# 3. 运行
+java -jar core/core-backend/target/CoreApplication.jar
+
+# 访问: http://localhost:8081
+```
+
+#### 构建不同版本
+
+DataEase 支持三种构建版本:
+
+**单机版 (standalone, 默认)**
+```bash
+mvn clean package
+# 或
+mvn clean package -P standalone
+```
+- 包含完整功能
+- 使用 H2 内嵌数据库
+- 包含 PDF 导出、邮件发送等功能
+
+**桌面版 (desktop)**
+```bash
+mvn clean package -P desktop
+```
+- 轻量级版本
+- 使用简化权限实现
+- 适合个人使用
+
+**分布式版 (distributed, 企业版)**
+```bash
+mvn clean package -P distributed
+```
+- 支持分布式部署
+- 需要外部 MySQL 数据库
+- 完整权限管理和多租户支持
+
+### 前端开发
+
+#### 开发模式
+
+```bash
+cd core/core-frontend
+
+# 开发模式(带热更新)
+npm run dev
+
+# TypeScript 类型检查
+npm run ts:check
+
+# 代码检查和格式化
+npm run lint
+npm run lint:stylelint
+```
+
+#### 构建模式
+
+```bash
+# 单机版构建
+npm run build:base
+
+# 分布式版构建
+npm run build:distributed
+
+# 库模式构建
+npm run build:lib
+```
+
+### 后端开发
+
+#### 常用命令
+
+```bash
+# 编译
+mvn clean compile
+
+# 打包(跳过测试)
+mvn clean package -DskipTests
+
+# 运行测试
+mvn test
+
+# 只构建 SDK
+cd sdk && mvn clean install
+
+# 只构建 Core
+cd core && mvn clean package
+```
+
+#### 开发配置
+
+后端配置文件位于 `core/core-backend/src/main/resources/`:
+
+- `application.yml` - 主配置
+- `application-standalone.yml` - 单机版配置
+- `application-desktop.yml` - 桌面版配置
+- `application-distributed.yml` - 分布式版配置
+
+修改配置后重启应用生效。
+
+### 数据库
+
+#### 开发环境(H2)
+
+单机版和桌面版默认使用 H2 内嵌数据库,无需额外配置。
+
+数据文件位置: `~/.dataease/data/dataease.mv.db`
+
+#### 生产环境(MySQL)
+
+创建数据库:
+```sql
+CREATE DATABASE dataease DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+```
+
+修改配置 `application-distributed.yml`:
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/dataease?useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: your_password
+```
+
+数据库表结构由 Flyway 自动创建和管理。
+
+### 数据库迁移
+
+DataEase 使用 Flyway 管理数据库版本:
+
+- 迁移脚本位置: `sdk/api/api-base/src/main/resources/db/migration/`
+- 命名规则: `V{版本号}__{描述}.sql`
+- 执行时机: 应用启动时自动执行未应用的迁移
+
+### 常见问题
+
+#### 1. 前端启动失败
+
+**问题**: `npm run dev` 报错
+
+**解决方案**:
+```bash
+# 清除缓存并重新安装
+rm -rf node_modules package-lock.json
+npm install
+
+# 确保 Node.js 版本正确
+node -v  # 应该是 16.x 或更高
+```
+
+#### 2. 后端启动失败
+
+**问题**: `端口 8081 已被占用`
+
+**解决方案**:
+```bash
+# 修改端口
+java -jar CoreApplication.jar --server.port=8082
+```
+
+**问题**: `找不到 SDK 模块`
+
+**解决方案**:
+```bash
+# 先安装 SDK 到本地 Maven 仓库
+cd sdk
+mvn clean install
+```
+
+#### 3. 构建失败
+
+**问题**: `前端资源未找到`
+
+**解决方案**:
+```bash
+# 确保先构建前端
+cd core/core-frontend
+npm run build:base
+
+# 再构建后端
+cd ../core-backend
+mvn clean package
+```
+
+### API 文档
+
+启动应用后,访问 Knife4j API 文档:
+
+```
+http://localhost:8081/doc.html
+```
+
+### 调试技巧
+
+**后端调试**: 使用 IDE (IntelliJ IDEA / Eclipse) 的调试模式运行 `CoreApplication`
+
+**前端调试**:
+- Chrome DevTools
+- Vue DevTools 浏览器扩展
+
+**日志查看**:
+```bash
+# 后端日志
+tail -f logs/dataease.log
+
+# 修改日志级别(application.yml)
+logging:
+  level:
+    io.dataease: DEBUG
+```
+
+### 贡献代码
+
+欢迎提交 Pull Request! 请确保:
+
+1. 代码符合项目规范(参考 [CLAUDE.md](./CLAUDE.md))
+2. 添加必要的注释(使用中文)
+3. 通过所有测试
+4. 提交信息清晰明了
+
+详见 [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+### 技术交流
+
 ## 飞致云的其他明星项目
 
 - [1Panel](https://github.com/1panel-dev/1panel/) - 现代化、开源的 Linux 服务器运维管理面板
