@@ -18,7 +18,7 @@ spring:
       config: classpath:ehcache/ehcache.xml
   data:
     redis:
-      host: 127.0.0.1
+      host: 192.168.17.7
       port: 6379
       password: 123456
       database: 0
@@ -34,7 +34,7 @@ mybatis:
     map-underscore-to-camel-case: true
 logging:
   file:
-    path: /opt/dataease2.0/logs/dataease
+    path: ${user.home}/logs/dataease
 # sql日志生产环境注释掉
 #mybatis-plus:
 #  configuration:
@@ -49,6 +49,10 @@ dataease:
   login_timeout: 2880
   xpack-front-distributed: true
   origin-list: http://localhost:8080
+  path:
+    ehcache: ${user.home}/opt/dataease2.0/cache
+    driver: ${user.home}/opt/dataease2.0/drivers
+    custom-drivers: ${user.home}/opt/dataease2.0/custom-drivers
   apisix-api:
     domain: http://127.0.0.1:9180
     key: edd1c9f034335f136f87ad84b625c8f1

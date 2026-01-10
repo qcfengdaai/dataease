@@ -775,6 +775,52 @@ feat(chart): 添加柱状图类型支持
 4. 防抖/节流
 5. 图片懒加载
 
+## 跨平台开发注意事项
+
+### 前端脚本跨平台支持
+
+**所有 npm scripts 已优化为跨平台兼容**:
+- 使用 `cross-env` 设置环境变量 (Windows/Linux/Mac 兼容)
+- 路径处理自动适配不同操作系统
+- 无需手动修改脚本即可在不同平台使用
+
+**开发环境准备**:
+```bash
+# 安装依赖 (首次或更新后)
+cd core/core-frontend
+npm install
+
+# 所有命令在各平台均可正常使用
+npm run dev              # 开发模式
+npm run build:base       # 构建单机版
+npm run build:distributed # 构建分布式版
+```
+
+### Windows 开发者注意事项
+
+1. **环境变量**: 使用 npm scripts 而不是直接设置环境变量
+2. **路径分隔符**: 使用正斜杠 `/` 或让工具自动处理
+3. **Shell 选择**: PowerShell、CMD 或 Git Bash 均可
+4. **换行符配置**:
+   ```bash
+   git config --global core.autocrlf true
+   ```
+
+### Linux/Mac 开发者注意事项
+
+1. **脚本权限**: 某些脚本可能需要执行权限
+2. **换行符配置**:
+   ```bash
+   git config --global core.autocrlf input
+   ```
+
+### 跨平台最佳实践
+
+1. **始终使用 npm scripts**: 不要直接运行底层命令
+2. **路径使用相对路径**: 避免硬编码绝对路径
+3. **环境变量通过 cross-env**: 不要使用平台特定语法
+4. **文件操作使用工具**: 如 `rimraf` 而不是 `rm -rf`
+
 ## 相关文档
 
 - [/CLAUDE.md](../CLAUDE.md) - 全局开发规范

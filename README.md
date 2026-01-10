@@ -331,13 +331,50 @@ DataEase 使用 Flyway 管理数据库版本:
 
 **解决方案**:
 ```bash
-# 清除缓存并重新安装
+# 清除缓存并重新安装 (Linux/Mac)
 rm -rf node_modules package-lock.json
+npm install
+
+# 清除缓存并重新安装 (Windows)
+rmdir /s /q node_modules
+del package-lock.json
 npm install
 
 # 确保 Node.js 版本正确
 node -v  # 应该是 16.x 或更高
 ```
+
+**问题**: Windows 下环境变量设置失败
+
+**解决方案**: 项目已使用 `cross-env` 解决跨平台兼容性,确保依赖已正确安装:
+```bash
+cd core/core-frontend
+npm install
+```
+
+**注意**: 所有 npm scripts 均已优化为跨平台兼容,在 Windows、macOS 和 Linux 上均可正常使用。
+
+**问题**: 构建时出现换行符错误 (`prettier/prettier Delete ␍`)
+
+**解决方案**: 这是 Windows CRLF vs Unix LF 的换行符问题。
+
+```bash
+# 1. 配置 Git (Windows 用户必须执行)
+git config --global core.autocrlf true
+
+# 2. 配置 Git (Linux/Mac 用户)
+git config --global core.autocrlf input
+
+# 3. 修复所有文件换行符
+cd core/core-frontend
+npm run lint -- --fix
+
+# 4. 重新构建
+cd ../..
+mvn clean package
+```
+
+详细说明请参考 [LINEENDING_FIX.md](./LINEENDING_FIX.md)
 
 #### 2. 后端启动失败
 

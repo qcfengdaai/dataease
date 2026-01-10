@@ -55,10 +55,10 @@ cd core && mvn clean package
 ```bash
 cd core/core-frontend
 
-# 安装依赖
+# 安装依赖 (首次运行或依赖更新后)
 npm install
 
-# 开发模式运行
+# 开发模式运行 (支持热更新)
 npm run dev
 
 # 构建单机版
@@ -79,6 +79,8 @@ npm run lint:stylelint
 # TypeScript 类型检查
 npm run ts:check
 ```
+
+**注意**: 前端构建脚本已优化为跨平台兼容,在 Windows、macOS 和 Linux 上均可正常使用。所有脚本使用 `cross-env` 来设置环境变量,确保在不同操作系统上的一致性。
 
 ## 启动应用
 
@@ -241,9 +243,30 @@ java io.dataease.MybatisPlusGenerator
 ## 常见问题
 
 ### 1. 前端构建失败
-- 检查 Node 版本 (推荐 Node 16+)
-- 清除缓存: `rm -rf node_modules && npm install`
-- 检查 `.npmrc` 配置
+
+**问题**: 依赖安装失败或构建报错
+
+**解决方案**:
+```bash
+# 清除缓存并重新安装
+rm -rf node_modules package-lock.json
+npm install
+
+# Windows 下使用
+rmdir /s /q node_modules
+del package-lock.json
+npm install
+
+# 检查 Node 版本 (推荐 Node 16+)
+node -v
+```
+
+**问题**: `NODE_OPTIONS` 环境变量设置失败 (Windows)
+
+**解决方案**: 项目已使用 `cross-env` 解决跨平台兼容性问题,确保依赖已安装:
+```bash
+npm install
+```
 
 ### 2. 后端启动失败
 - 检查 Java 版本 (必须 Java 21)
@@ -259,6 +282,25 @@ java io.dataease.MybatisPlusGenerator
 - SDK 模块必须先构建: `cd sdk && mvn clean install`
 - Core 模块依赖 SDK 模块,构建顺序: SDK → Core
 - 使用 `mvn clean install` 而不是 `package` 来安装到本地仓库
+
+### 5. 跨平台开发注意事项
+
+**Windows 开发者**:
+- 所有前端脚本已使用 `cross-env` 确保兼容性
+- 路径分隔符会自动处理,无需手动调整
+- PowerShell 和 CMD 均可正常使用 npm scripts
+
+**Linux/Mac 开发者**:
+- 使用标准的 bash 命令即可
+- 确保脚本具有执行权限 (如需要)
+
+**通用建议**:
+- 统一使用 npm scripts 而不是直接运行底层命令
+- Git 配置正确的换行符设置:
+  ```bash
+  git config --global core.autocrlf input  # Linux/Mac
+  git config --global core.autocrlf true   # Windows
+  ```
 
 ## 数据处理引擎
 

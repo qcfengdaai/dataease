@@ -1,3 +1,4 @@
+# 语言统计配置
 *.sql linguist-language=java
 *.yml linguist-language=Java
 *.html linguist-language=Java
@@ -5,3 +6,58 @@
 *.xml linguist-language=Java
 *.css linguist-language=Java
 *.ts linguist-language=Java
+
+# 换行符配置 - 强制使用 LF (Unix 风格)
+# 所有文本文件使用 LF，Git 会自动转换
+* text=auto eol=lf
+
+# 前端文件强制 LF
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.vue text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.less text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Java 文件强制 LF
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.sql text eol=lf
+
+# Shell 脚本强制 LF
+*.sh text eol=lf
+
+# Windows 批处理文件使用 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.jar binary
+*.war binary
+*.class binary

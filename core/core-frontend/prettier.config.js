@@ -13,8 +13,10 @@ module.exports = {
     // 多行逗号分割的语法中，最后一行不加逗号
     trailingComma: 'none',
      // 单个参数的箭头函数不加括号 x => x
-    arrowParens: 'avoid',     
+    arrowParens: 'avoid',
     // 对象大括号内两边是否加空格 { a:0 }
-    bracketSpacing: true,      
+    bracketSpacing: true,
+    // 换行符使用 lf (Unix 风格，跨平台兼容)
+    endOfLine: 'lf'
   }
   
