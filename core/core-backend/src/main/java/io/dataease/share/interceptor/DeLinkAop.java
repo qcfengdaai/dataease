@@ -8,6 +8,7 @@ import com.auth0.jwt.interfaces.Verification;
 import io.dataease.auth.DeLinkPermit;
 import io.dataease.constant.AuthConstant;
 import io.dataease.exception.DEException;
+import io.dataease.share.manage.XpackShareManage;
 import io.dataease.share.util.LinkTokenUtil;
 import io.dataease.utils.LogUtil;
 import io.dataease.utils.ServletUtils;

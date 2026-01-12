@@ -6,6 +6,7 @@ import io.dataease.api.xpack.share.request.*;
 import io.dataease.api.xpack.share.vo.XpackShareGridVO;
 import io.dataease.api.xpack.share.vo.XpackShareProxyVO;
 import io.dataease.api.xpack.share.vo.XpackShareVO;
+import io.dataease.share.manage.XpackShareManage;
 import io.dataease.utils.BeanUtils;
 import io.dataease.share.dao.auto.entity.XpackShare;
 import jakarta.annotation.Resource;

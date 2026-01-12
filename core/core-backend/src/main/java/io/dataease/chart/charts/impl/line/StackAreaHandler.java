@@ -58,7 +58,7 @@ public class StackAreaHandler extends YoyChartHandler {
      * @return 格式化后的堆叠面积图数据
      */
     @Override
-    public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]) data) {
+    public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult
                 .getFilterList()
                 .stream()
