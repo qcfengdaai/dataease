@@ -4,9 +4,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * table数据集表字段
- * </p>
+ * 数据集表字段实体类
+ * 对应数据库表 core_dataset_table_field，用于存储数据集表中字段的元数据信息
+ * 包含字段的原始信息、展示配置、扩展属性等
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>存储字段的基本信息（名称、类型、长度等）</li>
+ *   <li>字段的显示和格式化配置</li>
+ *   <li>字段的扩展属性和业务逻辑</li>
+ *   <li>字段在图表中的使用关联</li>
+ * </ul>
  *
  * @author fit2cloud
  * @since 2025-11-26

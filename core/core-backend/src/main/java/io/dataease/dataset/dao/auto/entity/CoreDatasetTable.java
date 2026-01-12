@@ -4,9 +4,18 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 数据集表实体类
+ * 对应数据库表 core_dataset_table，用于存储数据集中具体表的元数据信息
+ * 每个数据集可以包含多个数据表，支持多种数据源类型
+ *
+ * <p>支持的表类型：</p>
+ * <ul>
+ *   <li><b>db：</b>数据库物理表</li>
+ *   <li><b>sql：</b>SQL查询结果表</li>
+ *   <li><b>union：</b>多表联合查询</li>
+ *   <li><b>excel：</b>Excel文件数据</li>
+ *   <li><b>api：</b>API接口数据</li>
+ * </ul>
  *
  * @author fit2cloud
  * @since 2023-04-14
