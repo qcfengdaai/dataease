@@ -15,7 +15,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 数据集SQL日志管理类
+ * 负责数据集查询SQL的执行日志记录
+ * 用于SQL性能监控和调试
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>SQL执行日志的保存</li>
+ *   <li>按表ID查询执行历史</li>
+ *   <li>记录SQL开始时间、结束时间、耗时和状态</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 @Transactional(rollbackFor = Exception.class)

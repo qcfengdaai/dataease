@@ -61,6 +61,22 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
+/**
+ * SQL Bot助手管理类
+ * 提供智能SQL查询助手功能，支持自然语言查询数据集
+ * 通过AI接口将用户的自然语言转换为SQL查询
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>数据集的智能查询和推荐</li>
+ *   <li>表和字段的智能检索</li>
+ *   <li>权限过滤的数据集列表</li>
+ *   <li>SQL生成和执行</li>
+ *   <li>敏感数据加密处理</li>
+ * </ul>
+ *
+ * @author Junjun
+ */
 @Component
 public class DatasetSQLBotManage {
 

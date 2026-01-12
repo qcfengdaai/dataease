@@ -5,7 +5,8 @@ import java.io.Serializable;
 
 /**
  * <p>
- * 
+ * 核心操作记录实体类
+ * 用于记录用户对资源的最近操作历史,包括新建和修改操作
  * </p>
  *
  * @author fit2cloud

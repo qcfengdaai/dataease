@@ -10,6 +10,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * SQL Bot助手服务控制器
+ * 提供智能SQL查询助手功能的API接口
+ * 实现DataAssistantApi接口，支持自然语言查询数据集
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>数据源列表: getDatasourceList</li>
+ *   <li>数据集列表: getDatasetList</li>
+ * </ul>
+ *
+ * @author Junjun
+ */
 @RestController
 @RequestMapping("/sqlbot")
 public class DatasetSQLBotServer implements DataAssistantApi {

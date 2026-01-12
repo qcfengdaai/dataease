@@ -63,7 +63,31 @@ import static io.dataease.chart.manage.ChartDataManage.START_END_SEPARATOR;
 import static io.dataease.dataset.utils.TableUtils.format;
 
 /**
- * @Author Junjun
+ * 数据集数据管理类
+ * 负责数据集数据的查询、预览、字段获取等核心业务逻辑
+ * 协调数据源、SQL引擎、权限控制等多个模块完成复杂的数据处理任务
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>数据集表字段的获取和转换</li>
+ *   <li>数据预览和分页查询</li>
+ *   <li>字段枚举值查询（支持多字段、树形结构）</li>
+ *   <li>数据总数统计</li>
+ *   <li>SQL预览和日志记录</li>
+ *   <li>行权限和列权限的过滤</li>
+ *   <li>数据脱敏处理</li>
+ *   <li>跨数据源查询支持</li>
+ * </ul>
+ *
+ * <p>使用场景：</p>
+ * <ul>
+ *   <li>数据集编辑器中的数据预览</li>
+ *   <li>图表组件的数据查询</li>
+ *   <li>筛选组件的枚举值获取</li>
+ *   <li>数据集权限验证</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 public class DatasetDataManage {
@@ -92,12 +116,31 @@ public class DatasetDataManage {
 
     private static Logger logger = LoggerFactory.getLogger(DatasetDataManage.class);
 
+    /**
+     * 获取行权限API接口
+     * 用于获取企业版的行权限控制功能
+     *
+     * @return 行权限API接口，社区版返回null
+     */
     private RowPermissionsApi getRowPermissionsApi() {
         return rowPermissionsApi;
     }
 
+    /**
+     * 不支持完整连接的数据源类型列表
+     * 这些数据源在执行某些关联查询时可能存在限制
+     */
     public static final List<String> notFullDs = List.of("mysql", "mariadb", "Excel", "API", "H2", "h2");
 
+    /**
+     * 获取数据集表的字段信息
+     * 根据数据表类型（DB/SQL/Excel/API/ES）从数据源获取原始字段信息
+     * 并转换为DataEase统一的字段格式
+     *
+     * @param datasetTableDTO 数据表信息，包含数据源ID、表类型、表信息等
+     * @return 字段列表，包含字段的名称、类型、DataEase类型等信息
+     * @throws Exception 数据源连接失败或SQL解析失败时抛出异常
+     */
     public List<DatasetTableFieldDTO> getTableFields(DatasetTableDTO datasetTableDTO) throws Exception {
         List<DatasetTableFieldDTO> list = null;
         List<TableField> tableFields = null;
@@ -193,6 +236,14 @@ public class DatasetDataManage {
         return transFields(tableFields, true);
     }
 
+    /**
+     * 将数据源原始字段转换为DataEase字段格式
+     * 统一字段的类型、维度/维度标识、扩展字段类型等属性
+     *
+     * @param tableFields 数据源返回的原始字段列表
+     * @param defaultStatus 字段的默认选中状态
+     * @return 转换后的DataEase字段列表
+     */
     public List<DatasetTableFieldDTO> transFields(List<TableField> tableFields, boolean defaultStatus) {
         return tableFields.stream().map(ele -> {
             DatasetTableFieldDTO dto = new DatasetTableFieldDTO();
@@ -210,6 +261,18 @@ public class DatasetDataManage {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 带分页的数据预览
+     * 执行数据集查询并返回指定范围的数据，支持权限检查和数据编码
+     *
+     * @param datasetGroupInfoDTO 数据集信息，包含SQL、字段、排序等
+     * @param start 起始位置，从0开始
+     * @param count 返回的数据条数
+     * @param checkPermission 是否检查列权限和行权限
+     * @param encode 是否对敏感信息进行编码
+     * @return 包含数据、字段、SQL的结果Map
+     * @throws Exception 数据源异常或权限异常
+     */
     public Map<String, Object> previewDataWithLimit(DatasetGroupInfoDTO datasetGroupInfoDTO, Integer start, Integer count, boolean checkPermission, boolean encode) throws Exception {
         if (encode) {
             DatasetUtils.dsDecode(datasetGroupInfoDTO);
@@ -298,6 +361,14 @@ public class DatasetDataManage {
         return map;
     }
 
+    /**
+     * 获取数据集的总数据量
+     * 执行COUNT查询获取数据集的总记录数
+     *
+     * @param datasetGroupId 数据集ID
+     * @return 数据集总记录数，如果数据集不存在或为文件夹类型则返回0
+     * @throws Exception 查询异常
+     */
     public Long getDatasetTotal(Long datasetGroupId) throws Exception {
         DatasetGroupInfoDTO dto = datasetGroupManage.getForCount(datasetGroupId);
         if (ObjectUtils.isEmpty(dto)) return 0L;
@@ -307,6 +378,13 @@ public class DatasetDataManage {
         return 0L;
     }
 
+    /**
+     * 获取带权限过滤的数据集总数
+     * 在应用行权限过滤后统计数据集的记录数
+     *
+     * @param datasetGroupId 数据集ID
+     * @return 数据集记录数，查询失败返回null
+     */
     public Long getDatasetCountWithWhere(Long datasetGroupId) {
         try {
             DatasetGroupInfoDTO datasetGroupInfoDTO = datasetGroupManage.getForCount(datasetGroupId);
@@ -361,6 +439,16 @@ public class DatasetDataManage {
         }
     }
 
+    /**
+     * 执行COUNT查询获取数据集总数
+     * 支持自定义SQL和扩展请求参数
+     *
+     * @param datasetGroupInfoDTO 数据集信息
+     * @param s 自定义SQL，为null时使用数据集的默认SQL
+     * @param request 扩展请求参数（过滤器、参数等）
+     * @return 数据集总记录数
+     * @throws Exception 查询异常
+     */
     public Long getDatasetTotal(DatasetGroupInfoDTO datasetGroupInfoDTO, String s, ChartExtRequest request) throws Exception {
         Map<String, Object> sqlMap = datasetSQLManage.getUnionSQLForEdit(datasetGroupInfoDTO, request);
         Map<Long, DatasourceSchemaDTO> dsMap = (Map<Long, DatasourceSchemaDTO>) sqlMap.get("dsMap");
@@ -398,6 +486,14 @@ public class DatasetDataManage {
         return 0L;
     }
 
+    /**
+     * 带日志记录的SQL预览
+     * 执行SQL查询并记录执行日志（开始时间、结束时间、耗时、状态）
+     * 用于数据集编辑器中的SQL测试功能
+     *
+     * @param dto SQL预览请求，包含SQL、数据源、参数等信息
+     * @return 预览结果，包含数据、字段、执行的SQL
+     */
     public Map<String, Object> previewSqlWithLog(PreviewSqlDTO dto) {
         if (dto == null) {
             return null;
@@ -424,6 +520,12 @@ public class DatasetDataManage {
         return map;
     }
 
+    /**
+     * 获取当前登录用户信息
+     * 用于SQL变量替换中的用户相关参数
+     *
+     * @return 用户信息，企业版返回详细用户信息，社区版返回null
+     */
     private UserFormVO getUserEntity() {
         if (getRowPermissionsApi() == null) {
             return null;
@@ -431,6 +533,15 @@ public class DatasetDataManage {
         return getRowPermissionsApi().getUserById(AuthUtils.getUser().getUserId());
     }
 
+    /**
+     * SQL预览核心方法
+     * 解析SQL参数、处理变量、执行查询并返回结果
+     * 支持跨数据源查询和多种数据源类型
+     *
+     * @param dto SQL预览请求参数
+     * @return 预览结果
+     * @throws DEException SQL解析错误或数据源异常
+     */
     public Map<String, Object> previewSql(PreviewSqlDTO dto) throws DEException {
         CoreDatasource coreDatasource = dataSourceManage.getCoreDatasource(dto.getDatasourceId());
         DatasourceSchemaDTO datasourceSchemaDTO = new DatasourceSchemaDTO();
@@ -519,6 +630,16 @@ public class DatasetDataManage {
         return map;
     }
 
+    /**
+     * 构建预览数据
+     * 将查询结果转换为前端需要的格式，处理数据脱敏和编码
+     *
+     * @param data 原始查询结果
+     * @param fields 字段列表
+     * @param desensitizationList 脱敏字段列表
+     * @param isEncode 是否编码敏感信息
+     * @return 格式化后的数据Map
+     */
     public Map<String, Object> buildPreviewData(Map<String, Object> data, List<DatasetTableFieldDTO> fields, Map<String, ColumnPermissionItem> desensitizationList, boolean isEncode) {
         Map<String, Object> map = new LinkedHashMap<>();
         List<String[]> dataList = (List<String[]>) data.get("data");
@@ -556,6 +677,14 @@ public class DatasetDataManage {
         return map;
     }
 
+    /**
+     * 构建字段名称
+     * 为字段设置dataeaseName和fieldShortName，用于SQL生成
+     * 区分原始字段、计算字段、分组字段的不同命名规则
+     *
+     * @param sqlMap SQL映射信息
+     * @param fields 需要构建名称的字段列表
+     */
     public void buildFieldName(Map<String, Object> sqlMap, List<DatasetTableFieldDTO> fields) {
         // 获取内层union sql和字段
         List<DatasetTableFieldDTO> unionFields = (List<DatasetTableFieldDTO>) sqlMap.get("field");
@@ -592,6 +721,14 @@ public class DatasetDataManage {
         }
     }
 
+    /**
+     * 获取字段枚举值（跨数据源）
+     * 查询字段的所有不重复值，用于下拉筛选组件
+     *
+     * @param map 包含字段和数据集信息的枚举对象
+     * @return 字段的所有不重复值列表
+     * @throws Exception 查询异常
+     */
     public List<String> getFieldEnumDs(EnumObj map) throws Exception {
         DatasetTableFieldDTO field = map.getField();
         DatasetGroupInfoDTO datasetGroupInfoDTO = map.getDataset();
@@ -683,6 +820,15 @@ public class DatasetDataManage {
         return previewData;
     }
 
+    /**
+     * 获取多个字段的枚举值并去重合并
+     * 用于查询组件，支持多字段联合查询
+     * 会应用权限过滤和数据脱敏
+     *
+     * @param multFieldValuesRequest 多字段查询请求，包含字段ID列表、过滤条件等
+     * @return 所有字段的不重复值列表
+     * @throws Exception 查询异常或权限异常
+     */
     public List<String> getFieldEnum(MultFieldValuesRequest multFieldValuesRequest) throws Exception {
         if (CollectionUtils.isEmpty(multFieldValuesRequest.getFieldIds())) {
             return Collections.emptyList();
@@ -823,6 +969,15 @@ public class DatasetDataManage {
         return result.stream().toList();
     }
 
+    /**
+     * 获取字段枚举值对象列表
+     * 返回包含字段ID和值对应关系的对象列表
+     * 支持排序、搜索、过滤等高级功能
+     *
+     * @param request 枚举值请求，包含查询字段、显示字段、排序字段、过滤条件等
+     * @return 字段值对象列表，格式: [{字段ID: 值}, ...]
+     * @throws Exception 查询异常
+     */
     public List<Map<String, Object>> getFieldEnumObj(EnumValueRequest request) throws Exception {
         List<Long> ids = new ArrayList<>();
         if (ObjectUtils.isNotEmpty(request.getQueryId())) {
@@ -1091,6 +1246,15 @@ public class DatasetDataManage {
         return previewData;
     }
 
+    /**
+     * 获取字段值的树形结构
+     * 查询字段的层级值并构建为树形结构，用于树形下拉筛选组件
+     * 支持多字段组合查询，自动去重和层级构建
+     *
+     * @param multFieldValuesRequest 多字段查询请求
+     * @return 树形节点列表
+     * @throws Exception 查询异常
+     */
     public List<BaseTreeNodeDTO> getFieldValueTree(MultFieldValuesRequest multFieldValuesRequest) throws Exception {
         List<Long> ids = multFieldValuesRequest.getFieldIds();
         if (ids.isEmpty()) {

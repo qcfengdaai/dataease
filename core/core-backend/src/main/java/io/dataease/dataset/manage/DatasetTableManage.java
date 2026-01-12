@@ -16,7 +16,19 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 
 /**
- * @Author Junjun
+ * 数据集表管理类
+ * 负责数据集中关联表的增删改查操作
+ * 一个数据集可以关联多个数据表（单表、SQL、Excel、API等）
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>数据集表的保存和更新</li>
+ *   <li>按数据集ID查询关联表</li>
+ *   <li>数据集更新时的表清理</li>
+ *   <li>名称长度校验</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 public class DatasetTableManage {

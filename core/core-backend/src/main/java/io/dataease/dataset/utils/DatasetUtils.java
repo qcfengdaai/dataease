@@ -14,7 +14,22 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 数据集工具类
+ * 提供数据集相关的通用工具方法
+ * 主要负责计算字段的编码/解码和树形结构的合并处理
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>树形节点去重合并</li>
+ *   <li>计算字段Base64编码（dsEncode）</li>
+ *   <li>计算字段Base64解码（dsDecode）</li>
+ *   <li>视图字段批量编码/解码</li>
+ * </ul>
+ *
+ * <p>计算字段编码说明：</p>
+ * <p>为保护计算字段的表达式逻辑，在存储和传输时进行Base64编码</p>
+ *
+ * @author Junjun
  */
 public class DatasetUtils {
     public final static String SEPARATOR = "-de-";

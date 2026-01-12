@@ -15,7 +15,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @Author Junjun
+ * 数据集数据服务控制器
+ * 提供数据集数据查询、预览、字段枚举等API接口
+ * 实现DatasetDataApi接口，作为数据集数据操作的HTTP入口
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>数据预览: previewData</li>
+ *   <li>表字段查询: tableField</li>
+ *   <li>SQL预览: previewSql</li>
+ *   <li>字段枚举值: getFieldEnum</li>
+ *   <li>数据集统计: getDatasetTotal</li>
+ *   <li>树形字段值: getFieldValueTree</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @RestController
 @RequestMapping("datasetData")

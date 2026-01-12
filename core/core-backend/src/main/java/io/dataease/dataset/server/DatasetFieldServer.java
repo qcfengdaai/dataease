@@ -19,7 +19,20 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 数据集字段服务控制器
+ * 提供数据集字段的增删改查和字段相关功能API接口
+ * 实现DatasetTableApi接口，作为字段管理的HTTP入口
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>字段保存: save</li>
+ *   <li>字段查询: get, listByDatasetGroup</li>
+ *   <li>字段删除: delete</li>
+ *   <li>权限字段列表: listFieldsWithPermissions</li>
+ *   <li>SQL函数列表: getFunction</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @RestController
 @RequestMapping("datasetField")

@@ -11,20 +11,34 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.Map;
 
+/**
+ * 数据同步任务执行器
+ * 负责管理数据同步相关的定时任务，支持Cron表达式和简单轮询两种调度方式
+ */
 @Component("deXpackDataSyncTaskExecutor")
 public class DeXpackDataSyncTaskExecutor {
 
+    /** Cron表达式任务组 */
     private static final String SYNC_JOB_GROUP = "SYNC_TASK";
+    /** 简单轮询任务组 */
     private static final String SYNC_SIMPLE_JOB_GROUP = "SYNC_SIMPLE_TASK";
 
     @Resource
     private ScheduleManager scheduleManager;
 
+    /**
+     * 执行任务，由企业版实现
+     * @param taskData 任务数据
+     * @return 是否执行成功
+     */
     @XpackInteract(value = "dataSyncTaskExecutor", replace = true)
     public boolean execute(Map<String, Object> taskData) {
         return false;
     }
 
+    /**
+     * 初始化任务执行器，由企业版实现
+     */
     @XpackInteract(value = "dataSyncTaskExecutor", replace = true)
     public void init() {
     }
@@ -75,6 +89,11 @@ public class DeXpackDataSyncTaskExecutor {
 
     }
 
+    /**
+     * 删除同步任务
+     * @param taskId 任务ID
+     * @param isSimpleJob 是否为简单轮询任务
+     */
     public void removeSyncTask(String taskId, boolean isSimpleJob) {
         String jobGroup = isSimpleJob ? SYNC_SIMPLE_JOB_GROUP : SYNC_JOB_GROUP;
         JobKey jobKey = new JobKey(taskId, jobGroup);
@@ -87,17 +106,33 @@ public class DeXpackDataSyncTaskExecutor {
     /**
      * 获取间隔任务的下一次执行时间
      */
+    /**
+     * 获取间隔任务的下一次执行时间
+     * @param taskId 任务ID
+     * @param currentTime 当前时间
+     * @return 下一次执行时间的时间戳
+     */
     public Long getSimpleJobNextFireTime(String taskId, Date currentTime) {
         TriggerKey triggerKey = new TriggerKey(taskId, SYNC_SIMPLE_JOB_GROUP);
         return scheduleManager.getNextSimpleTriggerTime(triggerKey, currentTime);
     }
 
+    /**
+     * 暂停任务触发器
+     * @param taskId 任务ID
+     * @param isSimpleJob 是否为简单轮询任务
+     */
     public void pauseTrigger(String taskId, boolean isSimpleJob) {
         String jobGroup = isSimpleJob ? SYNC_SIMPLE_JOB_GROUP : SYNC_JOB_GROUP;
         TriggerKey triggerKey = new TriggerKey(taskId, jobGroup);
         scheduleManager.pauseTrigger(triggerKey);
     }
 
+    /**
+     * 恢复任务触发器
+     * @param taskId 任务ID
+     * @param isSimpleJob 是否为简单轮询任务
+     */
     public void resumeTrigger(String taskId, boolean isSimpleJob) {
         String jobGroup = isSimpleJob ? SYNC_SIMPLE_JOB_GROUP : SYNC_JOB_GROUP;
         TriggerKey triggerKey = new TriggerKey(taskId, jobGroup);

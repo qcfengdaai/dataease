@@ -11,6 +11,29 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+/**
+ * Quartz调度管理器
+ * 负责管理系统中所有的定时任务，包括任务的创建、修改、删除、暂停和恢复
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>支持Cron表达式定时任务</li>
+ *   <li>支持简单间隔定时任务</li>
+ *   <li>支持一次性任务</li>
+ *   <li>任务的动态添加、修改和删除</li>
+ *   <li>任务的暂停和恢复</li>
+ *   <li>任务执行状态查询</li>
+ * </ul>
+ *
+ * <p>使用场景：</p>
+ * <ul>
+ *   <li>数据集定时更新</li>
+ *   <li>数据同步任务</li>
+ *   <li>数据填报任务</li>
+ *   <li>报表生成任务</li>
+ *   <li>数据源状态检查</li>
+ * </ul>
+ */
 @Component
 public class ScheduleManager {
 
