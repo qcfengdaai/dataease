@@ -23,12 +23,24 @@ public class ChartViewFieldDTO extends ChartViewFieldBaseDTO implements Serializ
      */
     private List<String> customSort;
 
+    /**
+     * 业务类型
+     */
     private String busiType;
 
+    /**
+     * 是否聚合
+     */
     private boolean isAgg;
 
+    /**
+     * 是否隐藏
+     */
     private boolean hide;
 
+    /**
+     * 分组类型
+     */
     private String groupType;
 
     /**
@@ -42,5 +54,9 @@ public class ChartViewFieldDTO extends ChartViewFieldBaseDTO implements Serializ
      */
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Boolean show;
+
+    /**
+     * 字段名称
+     */
     private String field;
 }

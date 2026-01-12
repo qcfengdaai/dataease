@@ -31,7 +31,7 @@ import java.util.Objects;
  *
  * <p><b>占位符说明：</b></p>
  * <ul>
- *   <li>${user.home} - 用户主目录，如 /home/user 或 C:\Users\user</li>
+ *   <li>${user.home} - 用户主目录，如 /home/user 或 C:\\Users\\user</li>
  *   <li>${base-path} - 基础路径，从配置文件的base-path项读取</li>
  *   <li>占位符替换顺序：先替换${user.home}，再替换${base-path}</li>
  * </ul>
@@ -63,7 +63,7 @@ import java.util.Objects;
  * // base-path: ${user.home}/dataease
  * // file.upload-path: ${base-path}/upload
  * String uploadPath = ConfigUtils.getConfig("file.upload-path", "/tmp/upload");
- * // Windows: C:\Users\username\dataease\upload
+ * // Windows: C:\\Users\\username\\dataease\\upload
  * // Linux: /home/username/dataease/upload
  *
  * // 示例4：读取端口配置
@@ -92,7 +92,7 @@ import java.util.Objects;
  * // static-resource.path: ${base-path}/static
  * String staticPath = ConfigUtils.getConfig("static-resource.path", "/tmp/static");
  * // 结果: /home/user/opt/dataease2.0/static（Linux）
- * // 或: C:\Users\user\opt\dataease2.0\static（Windows）
+ * // 或: C:\\Users\\user\\opt\\dataease2.0\\static（Windows）
  *
  * // 示例8：配置不存在时使用默认值
  * String logLevel = ConfigUtils.getConfig("logging.level.root", "INFO");
@@ -216,10 +216,10 @@ public class ConfigUtils {
             factory.setResources(resource);
 
             String basePath = Objects.requireNonNull(factory.getObject()).getProperty("base-path", "");
-            basePath = basePath.replaceAll("\\$\\{user.home}", System.getProperty("user.home").replaceAll("\\\\", "/"));
+            basePath = basePath.replaceAll("\\\\$\\\\{user.home}", System.getProperty("user.home").replaceAll("\\\\\\\\", "/"));
 
             String property = Objects.requireNonNull(factory.getObject()).getProperty(key, defaultValue);
-            return property.replaceAll("\\$\\{base-path}", basePath);
+            return property.replaceAll("\\\\$\\\\{base-path}", basePath);
         } catch (Exception e) {
         }
         return defaultValue;
