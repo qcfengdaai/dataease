@@ -231,7 +231,7 @@ public class VisualizationOuterParamsService implements VisualizationOuterParams
                                 // 2.2.4.3.1 生成变量字段ID（格式：数据集表ID|DE|变量名）
                                 String varFieldId = coreDatasetTable.getId() + "|DE|" + sqlVariableDetails.getVariableName();
                                 // 2.2.4.3.2 确定字段类型（如果是DATETIME相关类型，统一为DATETIME）
-                                String fieldType = FieldUtils.transType2DeType(sqlVariableDetails.getType().get(0).contains("DATETIME") ? "DATETIME" : sqlVariableDetails.getType().get(0));
+                                int fieldType = FieldUtils.transType2DeType(sqlVariableDetails.getType().get(0).contains("DATETIME") ? "DATETIME" : sqlVariableDetails.getType().get(0));
                                 // 2.2.4.3.3 创建字段VO并添加到字段列表
                                 fields.add(new CoreDatasetTableFieldVO(varFieldId, sqlVariableDetails.getVariableName(), fieldType));
                             });
