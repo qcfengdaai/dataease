@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
+ * 系统设置实体类
  * <p>
- * 
+ * 用于存储系统级别的配置参数，支持键值对形式的配置管理
+ * 包括基础设置、地图配置、SQL Bot配置等多个模块
  * </p>
  *
  * @author fit2cloud

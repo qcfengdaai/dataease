@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 模板表
- * </p>
+ * 可视化模板分类映射实体类
+ * 用于存储模板与分类的多对多关联关系
  *
  * @author fit2cloud
  * @since 2023-12-04
@@ -22,12 +21,12 @@ public class VisualizationTemplateCategoryMap implements Serializable {
     private String id;
 
     /**
-     * 名称
+     * 分类ID
      */
     private String categoryId;
 
     /**
-     * 父级id
+     * 模板ID
      */
     private String templateId;
 

@@ -33,12 +33,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Author: wangjiahao
+ * 模板中心管理类
+ * 负责从模板市场获取模板信息、分类信息、推荐模板等功能
+ *
+ * @author wangjiahao
  */
 @Service
 public class TemplateCenterManage {
+    // 模板市场 V2 版本 API 地址
     private final static String POSTS_API_V2 = "/apis/api.store.halo.run/v1alpha1/applications?keyword=&priceMode=&sort=latestReleaseTimestamp%2Cdesc&type=THEME&deVersion=V2&templateType=&label=&page=1&size=2000";
+    // 模板元数据 URL
     private final static String TEMPLATE_META_DATA_URL = "/upload/meta_data.json";
+    // 模板基础信息 URL
     private final static String TEMPLATE_BASE_INFO_URL = "/apis/api.store.halo.run/v1alpha1/applications/";
     @Resource
     private SysParameterManage sysParameterManage;
@@ -53,8 +59,9 @@ public class TemplateCenterManage {
     private VisualizationTemplateCategoryMapMapper categoryMapMapper;
 
     /**
-     * @param templateUrl template url
-     * @Description Get template file from template market
+     * 从模板市场获取模板文件
+     * @param templateUrl 模板URL
+     * @return 模板文件信息
      */
     public TemplateManageFileDTO getTemplateFromMarket(String templateUrl) {
         if (StringUtils.isNotEmpty(templateUrl)) {
@@ -69,8 +76,9 @@ public class TemplateCenterManage {
     }
 
     /**
-     * @param templateUrl template url
-     * @Description Get template file from template market
+     * 从模板市场获取模板文件(V2版本)
+     * @param templateName 模板名称
+     * @return 模板文件信息
      */
     public TemplateManageFileDTO getTemplateFromMarketV2(String templateName) {
         if (StringUtils.isNotEmpty(templateName)) {
@@ -94,8 +102,10 @@ public class TemplateCenterManage {
     }
 
     /**
-     * @param url content api url
-     * @Description Get info from template market content api
+     * 从模板市场内容 API 获取信息
+     * @param url 内容API地址
+     * @param accessKey 访问密钥
+     * @return 返回内容
      */
     public String marketGet(String url, String accessKey) {
         HttpClientConfig config = new HttpClientConfig();
@@ -107,8 +117,14 @@ public class TemplateCenterManage {
                 get(url, config);
     }
 
+    /**
+     * 查询模板市场模板
+     * @param templateParams 模板参数
+     * @return 模板查询结果
+     */
     private MarketTemplateV2BaseResponse templateQuery(Map<String, String> templateParams) {
         try {
+            // 调用模板市场 API
             String result = marketGet(templateParams.get("template.url") + POSTS_API_V2, null);
             MarketTemplateV2BaseResponse postsResult = JsonUtil.parseObject(result, MarketTemplateV2BaseResponse.class);
             return postsResult;
@@ -118,6 +134,11 @@ public class TemplateCenterManage {
         }
     }
 
+    /**
+     * 搜索模板
+     * 合并模板市场和本地管理的模板数据
+     * @return 模板基础响应
+     */
     public MarketBaseResponse searchTemplate() {
         try {
             Map<String, String> templateParams = sysParameterManage.groupVal("template.");
@@ -129,6 +150,10 @@ public class TemplateCenterManage {
         return null;
     }
 
+    /**
+     * 从本地管理搜索模板
+     * @return 模板市场DTO列表
+     */
     private List<TemplateMarketDTO> searchTemplateFromManage() {
         try {
             List<TemplateManageDTO> manageResult = templateManageMapper.findBaseTemplateList();
@@ -142,6 +167,12 @@ public class TemplateCenterManage {
         return null;
     }
 
+    /**
+     * 将管理数据转换为市场数据格式
+     * @param manageResult 管理数据列表
+     * @param categoryMap 分类映射
+     * @return 模板市场DTO列表
+     */
     private List<TemplateMarketDTO> baseManage2MarketTrans(List<TemplateManageDTO> manageResult, Map<String, String> categoryMap) {
         List<TemplateMarketDTO> result = new ArrayList<>();
         manageResult.stream().forEach(templateManageDTO -> {
@@ -157,6 +188,11 @@ public class TemplateCenterManage {
     }
 
 
+    /**
+     * 搜索推荐模板
+     * 合并模板市场和本地管理的推荐模板数据
+     * @return 模板基础响应
+     */
     public MarketBaseResponse searchTemplateRecommend() {
         MarketTemplateV2BaseResponse v2BaseResponse = null;
         Map<String, String> templateParams = sysParameterManage.groupVal("template.");
@@ -171,6 +207,10 @@ public class TemplateCenterManage {
         return baseResponseV2TransRecommend(v2BaseResponse, manage, templateParams.get("template.url"));
     }
 
+    /**
+     * 搜索模板预览
+     * @return 模板预览基础响应
+     */
     public MarketPreviewBaseResponse searchTemplatePreview() {
         try {
             MarketBaseResponse baseContentRsp = searchTemplate();
@@ -192,6 +232,12 @@ public class TemplateCenterManage {
         return null;
     }
 
+    /**
+     * 检查模板分类是否匹配
+     * @param template 模板信息
+     * @param categoryNameMatch 分类名称
+     * @return 是否匹配
+     */
     private Boolean checkCategoryMatch(TemplateMarketDTO template, String categoryNameMatch) {
         try {
             return template.getCategories().stream()
@@ -202,7 +248,15 @@ public class TemplateCenterManage {
         }
     }
 
+    /**
+     * 转换 V2 响应为推荐模板响应
+     * @param v2BaseResponse V2 基础响应
+     * @param templateManages 本地管理模板列表
+     * @param url 基础URL
+     * @return 模板基础响应
+     */
     private MarketBaseResponse baseResponseV2TransRecommend(MarketTemplateV2BaseResponse v2BaseResponse, List<TemplateMarketDTO> templateManages, String url) {
+        // 获取最近使用时间
         Map<String, Long> useTime = coreOptRecentManage.findTemplateRecentUseTime();
         List<MarketMetaDataVO> categoryVO = getCategoriesV2().stream().filter(node -> !"全部".equalsIgnoreCase(node.getLabel())).collect(Collectors.toList());
         Map<String, String> categoriesMap = categoryVO.stream()
@@ -217,12 +271,14 @@ public class TemplateCenterManage {
                 }
             });
         }
-        // 最近使用排序
+        // 按最近使用时间排序
         Collections.sort(contents);
+        // 统计各类型模板数量
         Long countDataV = contents.stream().filter(item -> "PANEL".equals(item.getTemplateType())).count();
         Long countDashboard = contents.stream().filter(item -> "SCREEN".equals(item.getTemplateType())).count();
         List<TemplateMarketDTO> templateDataV = templateManages.stream().filter(item -> "PANEL".equals(item.getTemplateType())).collect(Collectors.toList());
         List<TemplateMarketDTO> templateDashboard = templateManages.stream().filter(item -> "SCREEN".equals(item.getTemplateType())).collect(Collectors.toList());
+        // 如果仪表板模板不足 10 个,从本地管理中补充
         if (countDataV < 10) {
             Long addItemCount = 10 - countDataV;
             Long addIndex = templateDataV.size() < addItemCount ? templateDataV.size() : addItemCount;
@@ -238,6 +294,13 @@ public class TemplateCenterManage {
         return new MarketBaseResponse(url, categoryVO, contents);
     }
 
+    /**
+     * 转换 V2 响应为模板响应
+     * @param v2BaseResponse V2 基础响应
+     * @param contents 模板内容列表
+     * @param url 基础URL
+     * @return 模板基础响应
+     */
     private MarketBaseResponse baseResponseV2Trans(MarketTemplateV2BaseResponse v2BaseResponse, List<TemplateMarketDTO> contents, String url) {
         Map<String, Long> useTime = coreOptRecentManage.findTemplateRecentUseTime();
         List<MarketMetaDataVO> categoryVO = getCategoriesObject().stream().filter(node -> !"全部".equalsIgnoreCase(node.getLabel())).collect(Collectors.toList());
@@ -259,35 +322,53 @@ public class TemplateCenterManage {
                 }
             });
         }
-        // 最近使用排序
+        // 按最近使用时间排序
         Collections.sort(contents);
         return new MarketBaseResponse(url, categoryVO.stream().filter(node -> activeCategoriesName.contains(node.getLabel())).collect(Collectors.toList()), contents);
     }
 
 
+    /**
+     * 获取所有分类名称列表
+     * @return 分类名称列表
+     */
     public List<String> getCategories() {
         return getCategoriesV2().stream().map(MarketMetaDataVO::getLabel)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 获取所有分类对象列表
+     * @return 分类对象列表
+     */
     public List<MarketMetaDataVO> getCategoriesObject() {
         List<MarketMetaDataVO> result = getCategoriesV2();
         result.add(0, new MarketMetaDataVO("recent", Translator.get("i18n_template_recent"), CommonConstants.TEMPLATE_SOURCE.PUBLIC));
         return result;
     }
 
+    /**
+     * 获取 V2 版本的分类映射
+     * @return 分类映射Map(slug -> label)
+     */
     public Map<String, String> getCategoriesBaseV2() {
         Map<String, String> categories = getCategoriesV2().stream()
                 .collect(Collectors.toMap(MarketMetaDataVO::getSlug, MarketMetaDataVO::getLabel));
         return categories;
     }
 
+    /**
+     * 获取 V2 版本的分类列表
+     * 合并模板市场分类和本地管理分类
+     * @return 分类对象列表
+     */
     public List<MarketMetaDataVO> getCategoriesV2() {
         List<MarketMetaDataVO> allCategories = new ArrayList<>();
         List<TemplateManageDTO> manageCategories = templateManageMapper.findCategories(null);
         List<MarketMetaDataVO> manageCategoriesTrans = manageCategories.stream()
                 .map(templateCategory -> new MarketMetaDataVO(templateCategory.getId(), templateCategory.getName(), CommonConstants.TEMPLATE_SOURCE.MANAGE))
                 .collect(Collectors.toList());
+        // 从模板市场获取分类
         try {
             Map<String, String> templateParams = sysParameterManage.groupVal("template.");
             String resultStr = marketGet(templateParams.get("template.url") + TEMPLATE_META_DATA_URL, null);
@@ -298,13 +379,21 @@ public class TemplateCenterManage {
             LogUtil.error("模板市场分类获取错误", e);
         }
 
+        // 合并并去重分类
         return mergeAndDistinctByLabel(allCategories, manageCategoriesTrans);
 
     }
 
+    /**
+     * 合并两个分类列表并根据标签去重
+     * @param list1 分类列表1
+     * @param list2 分类列表2
+     * @return 合并后的分类列表
+     */
     private List<MarketMetaDataVO> mergeAndDistinctByLabel(List<MarketMetaDataVO> list1, List<MarketMetaDataVO> list2) {
         List<MarketMetaDataVO> mergedList = new ArrayList<>(list1);
         mergedList.addAll(list2);
+        // 使用 LinkedHashMap 保持顺序并去重
         Map<String, MarketMetaDataVO> marketMetaDataMap = mergedList.stream()
                 .collect(Collectors.toMap(
                         MarketMetaDataVO::getLabel,
