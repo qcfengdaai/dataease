@@ -5,9 +5,10 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * <p>
- * 公共链接 Mapper 接口
- * </p>
+ * Xpack分享Mapper接口
+ *
+ * 提供xpack_share表的基础CRUD操作
+ * 继承MyBatis Plus的BaseMapper，自动拥有常用的增删改查方法
  *
  * @author fit2cloud
  * @since 2024-06-21

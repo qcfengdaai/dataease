@@ -42,6 +42,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Xpack分享业务管理类
+ *
+ * 负责处理分享链接的核心业务逻辑，包括：
+ * <ul>
+ * <li>分享链接的创建、删除、查询</li>
+ * <li>分享UUID、过期时间、密码的编辑</li>
+ * <li>分享链接的访问控制和权限验证</li>
+ * <li>分享列表的分页查询</li>
+ * <li>链接Token的生成和验证</li>
+ * </ul>
+ *
+ * @author fit2cloud
+ * @since 2024-06-21
+ */
 @Component("xpackShareManage")
 public class XpackShareManage {
 
