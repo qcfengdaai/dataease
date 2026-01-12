@@ -18,7 +18,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @Author Junjun
+ * 图表视图服务控制器
+ * 提供图表的增删改查和视图相关功能的API接口
+ * 实现ChartViewApi接口，作为图表视图管理的HTTP入口
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>图表CRUD: save, getData, getDetail</li>
+ *   <li>字段管理: listByDQ, copyField, deleteField</li>
+ *   <li>视图选项: viewOption</li>
+ *   <li>图表基础信息: chartBaseInfo</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @RestController
 @RequestMapping("chart")

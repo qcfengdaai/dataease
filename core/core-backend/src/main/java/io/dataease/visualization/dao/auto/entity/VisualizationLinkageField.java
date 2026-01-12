@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- *
- * </p>
+ * 可视化联动字段实体
+ * 用于配置图表联动时的字段映射关系
  *
  * @author fit2cloud
  * @since 2023-09-22
@@ -16,11 +15,10 @@ public class VisualizationLinkageField implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** ID */
     private Long id;
 
-    /**
-     * 联动ID
-     */
+    /** 联动ID */
     private Long linkageId;
 
     /**
@@ -38,8 +36,10 @@ public class VisualizationLinkageField implements Serializable {
      */
     private Long updateTime;
 
+    /** 复制来源 */
     private Long copyFrom;
 
+    /** 复制ID */
     private Long copyId;
 
     public Long getId() {

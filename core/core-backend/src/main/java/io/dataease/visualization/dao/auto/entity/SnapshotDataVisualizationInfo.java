@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 可视化大屏信息表
- * </p>
+ * 快照数据可视化信息实体
+ * 用于存储可视化仪表板的快照数据
  *
  * @author fit2cloud
  * @since 2025-03-24

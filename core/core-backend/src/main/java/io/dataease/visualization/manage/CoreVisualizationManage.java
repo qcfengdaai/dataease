@@ -35,6 +35,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+/**
+ * 核心可视化管理类
+ * 负责可视化仪表板的CRUD操作和业务逻辑处理
+ */
 @Component
 @Transactional
 public class CoreVisualizationManage {
@@ -70,17 +74,28 @@ public class CoreVisualizationManage {
     @Resource
     private ChartViewManege chartViewManege;
 
+    /**
+     * 查询可视化资源树
+     * 支持企业版扩展
+     *
+     * @param request 查询请求
+     * @return 资源树节点列表
+     */
     @XpackInteract(value = "visualizationResourceTree", replace = true, invalid = true)
     public List<BusiNodeVO> tree(BusiNodeRequest request) {
         List<VisualizationNodeBO> nodes = new ArrayList<>();
+        // 添加根节点
         if (ObjectUtils.isEmpty(request.getLeaf()) || !request.getLeaf()) {
             nodes.add(rootNode());
         }
+        // 构建查询条件
         QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("delete_flag", false);
         queryWrapper.ne("pid", -1);
+        // 根据节点类型筛选
         queryWrapper.eq(ObjectUtils.isNotEmpty(request.getLeaf()), "node_type", ObjectUtils.isNotEmpty(request.getLeaf()) && request.getLeaf() ? "leaf" : "folder");
         queryWrapper.eq("type", request.getBusiFlag());
+        // 社区版过滤企业版资源
         String info = CommunityUtils.getInfo();
         if (StringUtils.isNotBlank(info)) {
             queryWrapper.notExists(String.format(info, "data_visualization_info.id"));
@@ -97,15 +112,25 @@ public class CoreVisualizationManage {
         return TreeUtils.mergeTree(nodes, BusiNodeVO.class, false);
     }
 
+    /**
+     * 删除可视化资源
+     * 支持企业版扩展
+     * 删除时会级联删除所有子资源和关联的图表
+     *
+     * @param id 资源ID
+     */
     @XpackInteract(value = "visualizationResourceTree", before = false)
     public void delete(Long id) {
+        // 检查资源是否存在
         DataVisualizationInfo info = mapper.selectById(id);
         if (ObjectUtils.isEmpty(info)) {
             DEException.throwException("resource not exist");
         }
+        // 使用栈结构递归查找所有子节点
         Set<Long> delIds = new LinkedHashSet<>();
         Stack<Long> stack = new Stack<>();
         stack.add(id);
+        // 深度优先遍历所有子节点
         while (!stack.isEmpty()) {
             Long tempPid = stack.pop();
             if (isTopNode(tempPid)) continue;
@@ -119,10 +144,10 @@ public class CoreVisualizationManage {
                 });
             }
         }
-        // 删除可视化资源
+        // 删除可视化资源(主表和快照表)
         extDataVisualizationMapper.deleteDataVBatch(delIds,CommonConstants.RESOURCE_TABLE.CORE);
         extDataVisualizationMapper.deleteDataVBatch(delIds,CommonConstants.RESOURCE_TABLE.SNAPSHOT);
-        // 删除图表信息
+        // 删除关联的图表信息(主表和快照表)
         extDataVisualizationMapper.deleteViewsBatch(delIds,CommonConstants.RESOURCE_TABLE.CORE);
         extDataVisualizationMapper.deleteViewsBatch(delIds,CommonConstants.RESOURCE_TABLE.SNAPSHOT);
 

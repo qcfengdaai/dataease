@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 可视化背景实体
+ * 用于管理仪表板的背景图片和样式
  *
  * @author fit2cloud
  * @since 2023-06-12
@@ -16,22 +15,31 @@ public class VisualizationBackground implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 背景ID */
     private String id;
 
+    /** 背景名称 */
     private String name;
 
+    /** 分类 */
     private String classification;
 
+    /** 内容 */
     private String content;
 
+    /** 备注 */
     private String remark;
 
+    /** 排序 */
     private Integer sort;
 
+    /** 上传时间 */
     private Long uploadTime;
 
+    /** 基础URL */
     private String baseUrl;
 
+    /** URL */
     private String url;
 
     public String getId() {

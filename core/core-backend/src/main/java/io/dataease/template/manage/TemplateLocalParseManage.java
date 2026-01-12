@@ -42,6 +42,7 @@ public class TemplateLocalParseManage {
     /**
      * 初始化模板
      * 扫描并加载classpath下template目录中的所有模板文件
+     *
      * @throws Exception 初始化异常
      */
     public void doInit() throws Exception {
@@ -60,7 +61,8 @@ public class TemplateLocalParseManage {
                     version.setInstalledOn(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
                     // 解析模板文件
                     try {
-                        String content = new String(templateFile.getInputStream().readAllBytes());;
+                        String content = new String(templateFile.getInputStream().readAllBytes());
+                        ;
                         DataVisualizationBaseRequest template = JsonUtil.parseObject(content, DataVisualizationBaseRequest.class);
                         // 解析核心内容
                         parseCore(template);
@@ -74,16 +76,16 @@ public class TemplateLocalParseManage {
                         deTemplateVersionMapper.insert(version);
                         break;
                     }
-                    }
                 }
-
             }
+
         }
     }
 
     /**
      * 解析模板核心内容
      * 提取并保存模板中的静态资源
+     *
      * @param template 数据可视化基础请求
      */
     public void parseCore(DataVisualizationBaseRequest template) {
@@ -94,6 +96,7 @@ public class TemplateLocalParseManage {
 
     /**
      * 获取资源目录下的所有文件
+     *
      * @param directoryName 目录名称
      * @return 资源文件数组
      * @throws Exception 获取文件异常
@@ -110,6 +113,7 @@ public class TemplateLocalParseManage {
 
     /**
      * 读取文件内容
+     *
      * @param file 文件对象
      * @return 文件内容字符串
      * @throws IOException 读取异常

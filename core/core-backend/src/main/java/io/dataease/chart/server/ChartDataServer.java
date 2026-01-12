@@ -54,7 +54,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 图表数据服务控制器
+ * 提供图表数据查询、计算、导出等API接口
+ * 实现ChartDataApi接口，作为图表数据操作的HTTP入口
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>图表数据查询: getData</li>
+ *   <li>图表数据导出: exportExcel, exportDetails</li>
+ *   <li>字段枚举值: getFieldEnum</li>
+ *   <li>数据详情查询: getDataFromDetail</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @RestController
 @RequestMapping("/chartData")

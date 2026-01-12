@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 可视化主题实体
+ * 用于管理系统主题和自定义主题
  *
  * @author fit2cloud
  * @since 2023-07-12
@@ -16,6 +15,7 @@ public class VisualizationSubject implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 主题ID */
     private String id;
 
     /**

@@ -54,7 +54,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 图表视图管理类
+ * 负责图表视图的增删改查和配置管理
+ * 协调数据集、权限、可视化等多个模块完成图表的完整生命周期管理
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>图表的创建、编辑、删除</li>
+ *   <li>图表配置的保存和加载</li>
+ *   <li>图表快照管理</li>
+ *   <li>字段复制和删除</li>
+ *   <li>数据集关联检查</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 public class ChartViewManege {

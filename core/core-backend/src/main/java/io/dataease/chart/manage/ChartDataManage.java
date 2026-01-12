@@ -48,7 +48,30 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 图表数据管理类
+ * 负责图表数据的计算、生成和转换，是图表模块的核心业务逻辑处理类
+ * 协调数据集、SQL引擎、权限控制、图表处理器等多个模块完成图表数据渲染
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>图表数据计算和生成（calcData）</li>
+ *   <li>SQL构建和执行</li>
+ *   <li>数据权限过滤（行权限和列权限）</li>
+ *   <li>数据脱敏处理</li>
+ *   <li>同比环比计算</li>
+ *   <li>图表插件集成</li>
+ *   <li>跨数据源查询支持</li>
+ * </ul>
+ *
+ * <p>使用场景：</p>
+ * <ul>
+ *   <li>仪表板图表数据加载</li>
+ *   <li>图表编辑器预览</li>
+ *   <li>Excel数据导出</li>
+ *   <li>大屏数据展示</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 public class ChartDataManage {

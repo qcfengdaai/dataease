@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- *
- * </p>
+ * 可视化联动实体
+ * 用于配置仪表板中图表之间的联动关系
  *
  * @author fit2cloud
  * @since 2023-09-22
@@ -16,8 +15,10 @@ public class VisualizationLinkage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** ID */
     private Long id;
 
+    /** 仪表板ID */
     private Long dvId;
 
     /**
