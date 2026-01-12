@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
+ * RSA密钥对实体类
  * <p>
- * 
+ * 用于存储系统中的RSA公钥、私钥以及AES密钥信息，主要用于数据加密传输和安全认证
  * </p>
  *
  * @author fit2cloud
@@ -31,6 +32,9 @@ public class CoreRsa implements Serializable {
      */
     private String publicKey;
 
+    /**
+     * AES密钥
+     */
     private String aesKey;
 
     /**
