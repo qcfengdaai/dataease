@@ -19,6 +19,22 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 图表数据构建工具类
+ * 负责将原始数据转换为各种图表类型所需的数据格式
+ * 支持AntV、ECharts等多种图表库的数据格式转换
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>AntV图表数据格式转换</li>
+ *   <li>散点图数据构建</li>
+ *   <li>表格数据构建</li>
+ *   <li>数据脱敏处理</li>
+ *   <li>数值格式化和精度处理</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 public class ChartDataBuild {
 
     private final static String format = "(%s)";

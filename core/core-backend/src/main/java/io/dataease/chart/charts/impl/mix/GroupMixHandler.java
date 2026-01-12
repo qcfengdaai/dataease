@@ -11,6 +11,13 @@ public class GroupMixHandler extends MixHandler {
     @Getter
     private final String type = "chart-mix-group";
 
+    /**
+     * 格式化坐标轴
+     * 处理分组混合图的坐标轴配置，包括左轴分组和右轴的配置
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含左轴、右轴的完整配置
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var axisMap = new HashMap<ChartAxis, List<ChartViewFieldDTO>>();
@@ -44,6 +51,16 @@ public class GroupMixHandler extends MixHandler {
         return result;
     }
 
+    /**
+     * 构建标准图表结果
+     * 使用父类的方法构建分组混合图的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的分组混合图数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         return super.buildNormalResult(view, formatResult, filterResult, data);

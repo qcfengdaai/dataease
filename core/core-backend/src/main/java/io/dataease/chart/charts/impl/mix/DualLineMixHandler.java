@@ -16,6 +16,16 @@ public class DualLineMixHandler extends GroupMixHandler {
     @Getter
     private final String type = "chart-mix-dual-line";
 
+    /**
+     * 构建标准图表结果
+     * 将查询数据转换为双折线混合图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的双折线混合图数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult

@@ -38,6 +38,7 @@ public class VisualizationStoreManage {
     public void execute(VisualizationStoreRequest request) {
         Long resourceId = request.getId();
         Long uid = AuthUtils.getUser().getUserId();
+        // 如果已经收藏，则取消收藏（删除收藏记录）
         if (favorited(resourceId)) {
             QueryWrapper<CoreStore> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("resource_id", resourceId);
@@ -45,18 +46,20 @@ public class VisualizationStoreManage {
             coreStoreMapper.delete(queryWrapper);
             return;
         }
+        // 如果未收藏，则添加收藏记录
         String type = request.getType();
         BusiResourceEnum busiResourceEnum = BusiResourceEnum.valueOf(type.toUpperCase());
         if (ObjectUtils.isEmpty(busiResourceEnum)) {
             DEException.throwException("type is invalid");
         }
+        // 创建收藏记录
         CoreStore coreStore = new CoreStore();
-        coreStore.setId(IDUtils.snowID());
-        coreStore.setTime(System.currentTimeMillis());
-        coreStore.setUid(uid);
-        coreStore.setResourceId(resourceId);
-        coreStore.setResourceType(busiResourceEnum.getFlag());
-        coreStoreMapper.insert(coreStore);
+        coreStore.setId(IDUtils.snowID());  // 生成唯一ID
+        coreStore.setTime(System.currentTimeMillis());  // 设置收藏时间
+        coreStore.setUid(uid);  // 设置收藏用户
+        coreStore.setResourceId(resourceId);  // 设置资源ID
+        coreStore.setResourceType(busiResourceEnum.getFlag());  // 设置资源类型
+        coreStoreMapper.insert(coreStore);  // 插入收藏记录
     }
 
     public Boolean favorited(Long resourceId) {
@@ -95,9 +98,11 @@ public class VisualizationStoreManage {
 
     public IPage<StorePO> queryStorePage(int goPage, int pageSize, VisualizationWorkbranchQueryRequest request) {
         Long uid = AuthUtils.getUser().getUserId();
+        // 构建查询条件
         QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("s.uid", uid);
-        queryWrapper.isNotNull("s.resource_id");
+        queryWrapper.eq("s.uid", uid);  // 只查询当前用户的收藏记录
+        queryWrapper.isNotNull("s.resource_id");  // 资源ID不能为空
+        // 根据资源类型筛选
         if (StringUtils.isNotBlank(request.getType())) {
             BusiResourceEnum busiResourceEnum = BusiResourceEnum.valueOf(request.getType().toUpperCase());
             if (ObjectUtils.isEmpty(busiResourceEnum)) {
@@ -105,14 +110,18 @@ public class VisualizationStoreManage {
             }
             queryWrapper.eq("s.resource_type", busiResourceEnum.getFlag());
         }
+        // 根据关键词模糊查询资源名称（不区分大小写）
         if (StringUtils.isNotBlank(request.getKeyword())) {
             queryWrapper.apply("LOWER(v.name) LIKE LOWER(CONCAT('%', {0}, '%'))", request.getKeyword());
         }
+        // 社区版需要过滤企业版专属资源
         String info = CommunityUtils.getInfo();
         if (StringUtils.isNotBlank(info)) {
             queryWrapper.notExists(String.format(info, "s.resource_id"));
         }
+        // 按更新时间排序（支持升序和降序）
         queryWrapper.orderBy(true, request.isAsc(), "v.update_time");
+        // 执行分页查询
         Page<StorePO> page = new Page<>(goPage, pageSize);
         return coreStoreExtMapper.query(page, queryWrapper);
     }

@@ -15,8 +15,18 @@ import java.util.List;
 
 
 /**
- * @author : WangJiaHao
- * @date : 2023/11/13 13:25
+ * 可视化模板扩展数据管理
+ * <p>
+ * 处理模板的内置数据（缓存数据）
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>从模板缓存中获取图表数据</li>
+ * <li>为从模板创建的仪表板提供初始数据</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
  */
 @Service
 public class VisualizationTemplateExtendDataManage {
@@ -24,6 +34,15 @@ public class VisualizationTemplateExtendDataManage {
     @Resource
     private VisualizationTemplateExtendDataMapper extendDataMapper;
 
+    /**
+     * 从模板缓存中获取图表数据
+     * <p>
+     * 当从模板创建仪表板时，使用模板中内置的数据
+     *
+     * @param viewId 视图ID
+     * @param view   视图对象
+     * @return 填充了模板数据的视图对象
+     */
     public ChartViewDTO getChartDataInfo(Long viewId, ChartViewDTO view) {
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.eq("view_id",viewId);

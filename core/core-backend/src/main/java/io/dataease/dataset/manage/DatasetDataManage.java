@@ -911,21 +911,27 @@ public class DatasetDataManage {
      * @throws Exception 查询异常或权限异常
      */
     public List<String> getFieldEnum(MultFieldValuesRequest multFieldValuesRequest) throws Exception {
+        // 参数校验：如果没有字段ID，直接返回空列表
         if (CollectionUtils.isEmpty(multFieldValuesRequest.getFieldIds())) {
             return Collections.emptyList();
         }
+
         // 根据前端传的查询组件field ids，获取所有字段枚举值并去重合并
         List<List<String>> list = new ArrayList<>();
+
+        // 遍历每个字段ID（使用LinkedHashSet去重并保持顺序）
         for (Long id : new LinkedHashSet<>(multFieldValuesRequest.getFieldIds())) {
+            // 1. 获取字段信息
             DatasetTableFieldDTO field = datasetTableFieldManage.selectById(id);
             if (field == null) {
                 DEException.throwException(Translator.get("i18n_no_field"));
             }
+
+            // 2. 准备字段列表
             List<DatasetTableFieldDTO> allFields = new ArrayList<>();
-            // 根据图表计算字段，获取数据集
             Long datasetGroupId = field.getDatasetGroupId();
 
-            // check permission
+            // 3. 权限检查
             BusiPerCheckDTO dto = new BusiPerCheckDTO();
             dto.setId(datasetGroupId);
             dto.setAuthEnum(AuthEnum.READ);
@@ -933,47 +939,63 @@ public class DatasetDataManage {
             if (!checked) {
                 DEException.throwException(Translator.get("i18n_no_dataset_permission"));
             }
+
+            // 4. 如果是图表计算字段，获取计算字段列表
             if (field.getChartId() != null) {
                 allFields.addAll(datasetTableFieldManage.getChartCalcFields(field.getChartId()));
             }
+
+            // 5. 获取数据集信息
             DatasetGroupInfoDTO datasetGroupInfoDTO = datasetGroupManage.getDatasetGroupInfoDTO(datasetGroupId, null);
 
+            // 6. 获取联合SQL
             Map<String, Object> sqlMap = datasetSQLManage.getUnionSQLForEdit(datasetGroupInfoDTO, new ChartExtRequest());
             String sql = (String) sqlMap.get("sql");
 
+            // 7. 合并所有字段（原始字段 + 计算字段）
             allFields.addAll(datasetGroupInfoDTO.getAllFields());
 
+            // 8. 获取数据源映射
             Map<Long, DatasourceSchemaDTO> dsMap = (Map<Long, DatasourceSchemaDTO>) sqlMap.get("dsMap");
             boolean crossDs = datasetGroupInfoDTO.getIsCross();
+
+            // 9. 非跨数据源：替换schema别名
             if (!crossDs) {
                 sql = Utils.replaceSchemaAlias(sql, dsMap);
             }
 
-            // build query sql
+            // 10. 构建查询SQL元数据
             SQLMeta sqlMeta = new SQLMeta();
             Table2SQLObj.table2sqlobj(sqlMeta, null, "(" + sql + ")", crossDs);
 
-            // 获取allFields
+            // 11. 准备当前字段列表
             List<DatasetTableFieldDTO> fields = Collections.singletonList(field);
             Map<String, ColumnPermissionItem> desensitizationList = new HashMap<>();
+
+            // 12. 列权限过滤
             fields = permissionManage.filterColumnPermissions(fields, desensitizationList, datasetGroupInfoDTO.getId(), null);
             if (ObjectUtils.isEmpty(fields)) {
                 DEException.throwException(Translator.get("i18n_no_column_permission"));
             }
+
+            // 13. 构建字段名称
             buildFieldName(sqlMap, fields);
 
+            // 14. 收集数据源类型
             List<String> dsList = new ArrayList<>();
             for (Map.Entry<Long, DatasourceSchemaDTO> next : dsMap.entrySet()) {
                 dsList.add(next.getValue().getType());
             }
             boolean needOrder = Utils.isNeedOrder(dsList);
 
+            // 15. 获取行权限树
             List<DataSetRowPermissionsTreeDTO> rowPermissionsTree = new ArrayList<>();
             TokenUserBO user = AuthUtils.getUser();
             if (user != null) {
                 rowPermissionsTree = permissionManage.getRowPermissionsTree(datasetGroupInfoDTO.getId(), user.getUserId());
             }
 
+            // 16. 选择Provider
             Provider provider;
             if (crossDs) {
                 provider = ProviderFactory.getDefaultProvider();
@@ -981,26 +1003,33 @@ public class DatasetDataManage {
                 provider = ProviderFactory.getProvider(dsList.getFirst());
             }
 
+            // 17. 获取数据源类型
             String dsType = null;
             if (dsMap != null && dsMap.entrySet().iterator().hasNext()) {
                 Map.Entry<Long, DatasourceSchemaDTO> next = dsMap.entrySet().iterator().next();
                 dsType = next.getValue().getType();
             }
 
+            // 18. 构建SQL各部分
             Field2SQLObj.field2sqlObj(sqlMeta, fields, allFields, crossDs, dsMap, Utils.getParams(allFields), null, pluginManage);
             WhereTree2Str.transFilterTrees(sqlMeta, rowPermissionsTree, allFields, crossDs, dsMap, Utils.getParams(allFields), null, pluginManage);
             Order2SQLObj.getOrders(sqlMeta, datasetGroupInfoDTO.getSortFields(), allFields, crossDs, dsMap, Utils.getParams(allFields), null, pluginManage);
+
+            // 19. 生成查询SQL
             String querySQL;
             if (multFieldValuesRequest.getResultMode() == 0) {
+                // 模式0：限制1000条
                 querySQL = SQLProvider.createQuerySQLWithLimit(sqlMeta, false, needOrder, !StringUtils.equalsIgnoreCase(dsType, "es"), 0, 1000);
             } else {
+                // 模式1：返回所有数据
                 querySQL = SQLProvider.createQuerySQL(sqlMeta, false, needOrder, !StringUtils.equalsIgnoreCase(dsType, "es"));
             }
+
+            // 20. 重建SQL
             querySQL = provider.rebuildSQL(querySQL, sqlMeta, crossDs, dsMap);
             logger.debug("calcite data enum sql: " + querySQL);
 
-            // 通过数据源请求数据
-            // 调用数据源的calcite获得data
+            // 21. 执行查询
             DatasourceRequest datasourceRequest = new DatasourceRequest();
             datasourceRequest.setQuery(querySQL);
             datasourceRequest.setDsList(dsMap);
@@ -1008,6 +1037,8 @@ public class DatasetDataManage {
 
             Map<String, Object> data = provider.fetchResultField(datasourceRequest);
             List<String[]> dataList = (List<String[]>) data.get("data");
+
+            // 22. 过滤包含空值的行
             dataList = dataList.stream().filter(row -> {
                 boolean hasEmpty = false;
                 for (String s : row) {
@@ -1018,10 +1049,15 @@ public class DatasetDataManage {
                 }
                 return !hasEmpty;
             }).toList();
+
+            // 23. 提取第一列数据并处理
             List<String> previewData = new ArrayList<>();
             if (ObjectUtils.isNotEmpty(dataList)) {
+                // 只取第一列数据
                 List<String> tmpData = dataList.stream().map(ele -> (ObjectUtils.isNotEmpty(ele) && ele.length > 0) ? ele[0] : null).collect(Collectors.toList());
+
                 if (!CollectionUtils.isEmpty(tmpData)) {
+                    // 处理科学计数法的数值
                     for (int i = 0; i < tmpData.size(); i++) {
                         String val = tmpData.get(i);
                         if (field.getDeType() == 3 && StringUtils.containsIgnoreCase(val, "E")) {
@@ -1030,11 +1066,14 @@ public class DatasetDataManage {
                             tmpData.set(i, val);
                         }
                     }
+
+                    // 数据脱敏处理
                     if (desensitizationList.keySet().contains(field.getDataeaseName())) {
                         for (int i = 0; i < tmpData.size(); i++) {
                             previewData.add(ChartDataBuild.desensitizationValue(desensitizationList.get(field.getDataeaseName()), tmpData.get(i)));
                         }
                     } else {
+                        // 无需脱敏，直接使用
                         previewData = tmpData;
                     }
                 }
@@ -1042,11 +1081,13 @@ public class DatasetDataManage {
             }
         }
 
-        // 重新构造data
+        // 24. 合并所有字段的枚举值并去重（使用LinkedHashSet保持顺序）
         Set<String> result = new LinkedHashSet<>();
         for (List<String> l : list) {
             result.addAll(l);
         }
+
+        // 25. 返回去重后的枚举值列表
         return result.stream().toList();
     }
 

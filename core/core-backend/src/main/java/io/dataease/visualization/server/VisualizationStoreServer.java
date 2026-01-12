@@ -16,6 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 可视化存储服务
+ * <p>
+ * 处理可视化资源的收藏、查询等操作
+ *
+ * @author DataEase
+ * @since 2024-06-21
+ */
 @RequestMapping("/store")
 @RestController
 public class VisualizationStoreServer implements VisualizationStoreApi {
@@ -23,11 +31,22 @@ public class VisualizationStoreServer implements VisualizationStoreApi {
     @Resource
     private VisualizationStoreManage visualizationStoreManage;
 
+    /**
+     * 执行存储操作
+     *
+     * @param request 存储请求
+     */
     @Override
     public void execute(VisualizationStoreRequest request) {
         visualizationStoreManage.execute(request);
     }
 
+    /**
+     * 查询存储的可视化资源
+     *
+     * @param request 查询请求
+     * @return 可视化资源列表
+     */
     @Override
     public List<VisualizationStoreVO> query(VisualizationWorkbranchQueryRequest request) {
         IPage<VisualizationStoreVO> iPage = visualizationStoreManage.query(1, 20, request);
@@ -41,6 +60,12 @@ public class VisualizationStoreServer implements VisualizationStoreApi {
         return iPage.getRecords();
     }
 
+    /**
+     * 检查资源是否已收藏
+     *
+     * @param id 资源ID
+     * @return 如果已收藏返回true，否则返回false
+     */
     @Override
     public boolean favorited(Long id) {
         return visualizationStoreManage.favorited(id);

@@ -33,6 +33,22 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 数据引擎管理类
+ * 负责DataEase内置数据引擎（H2数据库）的管理和维护
+ * 提供数据引擎的初始化、配置、连接等功能
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>数据引擎的初始化和配置</li>
+ *   <li>数据引擎信息查询和更新</li>
+ *   <li>数据引擎连接测试</li>
+ *   <li>数据引擎状态验证</li>
+ *   <li>Excel/API数据的存储支持</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @Component
 @Transactional(rollbackFor = Exception.class)
 public class EngineManage {

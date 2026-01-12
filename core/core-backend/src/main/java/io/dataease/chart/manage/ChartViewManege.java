@@ -95,6 +95,14 @@ public class ChartViewManege {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 保存图表视图
+     * 创建或更新图表视图配置信息
+     *
+     * @param chartViewDTO 图表视图数据传输对象
+     * @return 保存后的图表视图信息
+     * @throws Exception 当标题超过100字符或ID为空时抛出异常
+     */
     @Transactional
     public ChartViewDTO save(ChartViewDTO chartViewDTO) throws Exception {
         if (chartViewDTO.getTitle().length() > 100) {
@@ -121,30 +129,70 @@ public class ChartViewManege {
         return chartViewDTO;
     }
 
+    /**
+     * 删除图表视图
+     * 根据图表ID删除对应的视图记录
+     *
+     * @param id 图表视图ID
+     */
     public void delete(Long id) {
         coreChartViewMapper.deleteById(id);
     }
 
+    /**
+     * 停用图表视图
+     * 批量停用指定的图表视图（企业版功能）
+     *
+     * @param chartIdList 图表ID列表
+     */
     @XpackInteract(value = "chartViewManage")
     public void disuse(List<Long> chartIdList) {
     }
 
+    /**
+     * 镜像操作发布
+     * 发布图表阈值的镜像配置（企业版功能）
+     *
+     * @param resourceId 资源ID
+     * @param chartIdList 图表ID列表
+     */
     //镜像操作发布
     @XpackInteract(value = "chartViewManage")
     public void publishThreshold(Long resourceId, List<Long> chartIdList) {
     }
 
+    /**
+     * 镜像操作删除
+     * 删除图表阈值的镜像配置（企业版功能）
+     *
+     * @param resourceId 资源ID
+     * @param resourceTable 资源表名称
+     */
     //镜像操作删除
     @XpackInteract(value = "chartViewManage")
     public void removeThreshold(Long resourceId, String resourceTable) {
 
     }
 
+    /**
+     * 镜像操作恢复
+     * 恢复图表阈值的镜像配置（企业版功能）
+     *
+     * @param resourceId 资源ID
+     * @param resourceTable 资源表名称
+     */
     //镜像操作恢复
     @XpackInteract(value = "chartViewManage")
     public void restoreThreshold(Long resourceId, String resourceTable) {
     }
 
+    /**
+     * 根据场景ID批量删除图表
+     * 删除指定场景下除指定图表ID外的所有图表
+     *
+     * @param sceneId 场景ID（仪表板或数据大屏ID）
+     * @param chartIds 保留的图表ID列表
+     */
     @Transactional
     public void deleteBySceneId(Long sceneId, List<Long> chartIds) {
         QueryWrapper<CoreChartView> wrapper = new QueryWrapper<>();
@@ -153,6 +201,14 @@ public class ChartViewManege {
         coreChartViewMapper.delete(wrapper);
     }
 
+    /**
+     * 获取图表详细信息
+     * 根据ID和资源表类型查询图表的详细配置信息
+     *
+     * @param id 图表ID
+     * @param resourceTable 资源表类型（CORE/SNAPSHOT）
+     * @return 图表视图数据传输对象，不存在则返回null
+     */
     public ChartViewDTO getDetails(Long id, String resourceTable) {
         CoreChartView coreChartView = null;
         if (CommonConstants.RESOURCE_TABLE.SNAPSHOT.equals(resourceTable)) {
@@ -173,7 +229,12 @@ public class ChartViewManege {
     }
 
     /**
-     * sceneId 为仪表板或者数据大屏id
+     * 根据场景ID查询图表列表
+     * 查询指定仪表板或数据大屏下的所有图表
+     *
+     * @param sceneId 场景ID（仪表板或数据大屏ID）
+     * @param resourceTable 资源表类型
+     * @return 图表视图列表
      */
     public List<ChartViewDTO> listBySceneId(Long sceneId, String resourceTable) {
         QueryWrapper<CoreChartView> wrapper = new QueryWrapper<>();
@@ -260,10 +321,28 @@ public class ChartViewManege {
         return chartDataManage.calcData(details);
     }
 
+    /**
+     * 获取图表视图
+     * 根据图表ID和资源表类型获取图表视图信息
+     *
+     * @param id 图表ID
+     * @param resourceTable 资源表类型
+     * @return 图表视图数据传输对象
+     * @throws Exception 查询异常
+     */
     public ChartViewDTO getChart(Long id, String resourceTable) throws Exception {
         return getChart(id, resourceTable, false);
     }
 
+    /**
+     * 获取数据集的字段列表（用于图表编辑）
+     * 查询数据集的所有可用字段，包括维度和度量，并进行权限过滤
+     *
+     * @param id 数据集ID
+     * @param chartId 图表ID（用于获取图表计算字段）
+     * @param chartViewDTO 图表视图信息
+     * @return 包含维度列表和度量列表的Map，key为"dimensionList"和"quotaList"
+     */
     public Map<String, List<ChartViewFieldDTO>> listByDQ(Long id, Long chartId, ChartViewDTO chartViewDTO) {
         QueryWrapper<CoreDatasetTableField> wrapper = new QueryWrapper<>();
         wrapper.eq("dataset_group_id", id);
@@ -331,6 +410,13 @@ public class ChartViewManege {
         return map;
     }
 
+    /**
+     * 复制字段到图表
+     * 将数据集字段复制为图表的计算字段
+     *
+     * @param id 原字段ID
+     * @param chartId 目标图表ID
+     */
     public void copyField(Long id, Long chartId) {
         CoreDatasetTableField coreDatasetTableField = coreDatasetTableFieldMapper.selectById(id);
         QueryWrapper<CoreDatasetTableField> queryWrapper = new QueryWrapper<>();
@@ -359,16 +445,36 @@ public class ChartViewManege {
         }
     }
 
+    /**
+     * 删除字段
+     * 根据字段ID删除字段记录
+     *
+     * @param id 字段ID
+     */
     public void deleteField(Long id) {
         coreDatasetTableFieldMapper.deleteById(id);
     }
 
+    /**
+     * 批量删除图表字段
+     * 删除指定图表的所有计算字段
+     *
+     * @param chartId 图表ID
+     */
     public void deleteFieldByChartId(Long chartId) {
         QueryWrapper<CoreDatasetTableField> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("chart_id", chartId);
         coreDatasetTableFieldMapper.delete(queryWrapper);
     }
 
+    /**
+     * 获取图表基础信息
+     * 查询图表的基础配置，包括坐标轴、样式等
+     *
+     * @param id 图表ID
+     * @param resourceTable 资源表类型
+     * @return 图表基础信息VO，不存在则返回null
+     */
     public ChartBaseVO chartBaseInfo(Long id, String resourceTable) {
         ChartBasePO po = extChartViewMapper.queryChart(id, resourceTable);
         if (ObjectUtils.isEmpty(po)) return null;
@@ -393,6 +499,13 @@ public class ChartViewManege {
         return vo;
     }
 
+    /**
+     * 创建计数字段
+     * 为数据集创建一个默认的计数字段
+     *
+     * @param id 数据集ID
+     * @return 计数字段DTO
+     */
     public DatasetTableFieldDTO createCountField(Long id) {
         DatasetTableFieldDTO dto = new DatasetTableFieldDTO();
         dto.setId(-1L);
@@ -409,6 +522,13 @@ public class ChartViewManege {
         return dto;
     }
 
+    /**
+     * 转换字段DTO列表
+     * 将数据集字段DTO转换为图表视图字段DTO
+     *
+     * @param list 数据集字段DTO列表
+     * @return 图表视图字段DTO列表
+     */
     public List<ChartViewFieldDTO> transFieldDTO(List<DatasetTableFieldDTO> list) {
         return list.stream().map(ele -> {
             ChartViewFieldDTO dto = new ChartViewFieldDTO();
@@ -437,6 +557,14 @@ public class ChartViewManege {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 将DTO转换为实体记录
+     * 将图表视图DTO转换为持久化实体对象，用于数据库存储
+     *
+     * @param dto 图表视图数据传输对象
+     * @return 快照核心图表视图实体
+     * @throws Exception JSON序列化异常
+     */
     public SnapshotCoreChartView transDTO2Record(ChartViewDTO dto) throws Exception {
         SnapshotCoreChartView record = new SnapshotCoreChartView();
         BeanUtils.copyBean(record, dto);
@@ -468,6 +596,13 @@ public class ChartViewManege {
         return record;
     }
 
+    /**
+     * 将实体记录转换为DTO
+     * 将数据库实体对象转换为图表视图DTO
+     *
+     * @param record 核心图表视图实体
+     * @return 图表视图数据传输对象
+     */
     public ChartViewDTO transRecord2DTO(CoreChartView record) {
         ChartViewDTO dto = new ChartViewDTO();
         BeanUtils.copyBean(dto, record);
@@ -505,6 +640,14 @@ public class ChartViewManege {
 
     }
 
+    /**
+     * 检查两个图表是否使用相同数据集
+     * 对比源图表和目标图表的数据集ID
+     *
+     * @param viewIdSource 源图表ID
+     * @param viewIdTarget 目标图表ID
+     * @return "yes"表示相同，"no"表示不同
+     */
     public String checkSameDataSet(String viewIdSource, String viewIdTarget) {
         QueryWrapper<CoreChartView> wrapper = new QueryWrapper<>();
         wrapper.select("distinct table_id");
@@ -518,6 +661,13 @@ public class ChartViewManege {
 
     }
 
+    /**
+     * 获取视图选择器列表
+     * 查询指定仪表板下的所有图表，用于视图选择器
+     *
+     * @param resourceId 资源ID（仪表板ID）
+     * @return 视图选择器VO列表
+     */
     public List<ViewSelectorVO> viewOption(Long resourceId) {
         List<ViewSelectorVO> result = extChartViewMapper.queryViewOption(resourceId);
         DataVisualizationInfo dvInfo = visualizationInfoMapper.selectById(resourceId);
@@ -529,6 +679,13 @@ public class ChartViewManege {
         }
     }
 
+    /**
+     * 查找图表视图
+     * 根据视图ID查找对应的图表视图信息
+     *
+     * @param viewId 视图ID
+     * @return 图表视图DTO
+     */
     public ChartViewDTO findChartViewAround(String viewId) {
         return extChartViewMapper.findChartViewAround(viewId);
     }

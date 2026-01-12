@@ -16,6 +16,13 @@ public class ScatterHandler extends YoyChartHandler {
     @Getter
     private String type = "scatter";
 
+    /**
+     * 格式化坐标轴
+     * 处理散点图的坐标轴配置，包括气泡字段和扩展标签、提示字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含气泡字段和扩展字段配置
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);
@@ -30,6 +37,16 @@ public class ScatterHandler extends YoyChartHandler {
         return result;
     }
 
+    /**
+     * 构建标准图表结果
+     * 将查询数据转换为散点图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的散点图数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult.getFilterList().stream().anyMatch(ele -> ele.getFilterType() == 1);

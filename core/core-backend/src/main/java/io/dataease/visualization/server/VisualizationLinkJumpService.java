@@ -32,8 +32,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author : WangJiaHao
- * @date : 2023/7/18 14:31
+ * 可视化图表跳转服务
+ * <p>
+ * 处理仪表板中图表的跳转配置
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>配置图表跳转（内部跳转或外部链接）</li>
+ * <li>查询跳转信息</li>
+ * <li>更新跳转激活状态</li>
+ * <li>删除跳转配置</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
  */
 @RestController
 @RequestMapping("linkJump")
@@ -73,13 +85,25 @@ public class VisualizationLinkJumpService implements VisualizationLinkJumpApi {
     @Resource
     private DataVisualizationInfoMapper dataVisualizationInfoMapper;
 
+    /**
+     * 根据视图ID获取表字段
+     *
+     * @param viewId 视图ID
+     * @return 字段列表
+     */
     @Override
     public List<DatasetTableFieldDTO> getTableFieldWithViewId(Long viewId) {
         return extVisualizationLinkageMapper.queryTableFieldWithViewId(viewId);
     }
 
+    /**
+     * 获取仪表板的跳转信息
+     *
+     * @param dvId          仪表板ID
+     * @param resourceTable 资源表（core或snapshot）
+     * @return 跳转信息
+     */
     @DeLinkPermit
-    //获取仪表板的跳转信息
     @Override
     public VisualizationLinkJumpBaseResponse queryVisualizationJumpInfo(Long dvId, String resourceTable) {
         Map<String, VisualizationLinkJumpInfoDTO> resultBase = new HashMap<>();
@@ -111,11 +135,25 @@ public class VisualizationLinkJumpService implements VisualizationLinkJumpApi {
         return new VisualizationLinkJumpBaseResponse(resultBase, null);
     }
 
+    /**
+     * 根据视图ID查询跳转信息
+     *
+     * @param dvId  仪表板ID
+     * @param viewId 视图ID
+     * @return 跳转信息
+     */
     @Override
     public VisualizationLinkJumpDTO queryWithViewId(Long dvId, Long viewId) {
         return extVisualizationLinkJumpMapper.queryWithViewId(dvId, viewId, AuthUtils.getUser().getUserId(), ModelUtils.isDesktop());
     }
 
+    /**
+     * 更新跳转配置
+     * <p>
+     * 会清除原有跳转配置，然后保存新的配置
+     *
+     * @param jumpDTO 跳转配置
+     */
     @Transactional
     @Override
     public void updateJumpSet(VisualizationLinkJumpDTO jumpDTO) {
@@ -152,6 +190,12 @@ public class VisualizationLinkJumpService implements VisualizationLinkJumpApi {
         });
     }
 
+    /**
+     * 查询目标仪表板的跳转信息
+     *
+     * @param request 跳转请求
+     * @return 跳转信息
+     */
     @DeLinkPermit("#p0.targetDvId")
     @Override
     public VisualizationLinkJumpBaseResponse queryTargetVisualizationJumpInfo(VisualizationLinkJumpBaseRequest request) {
@@ -164,6 +208,12 @@ public class VisualizationLinkJumpService implements VisualizationLinkJumpApi {
         return new VisualizationLinkJumpBaseResponse(null, Optional.ofNullable(result).orElse(new ArrayList<>()).stream().filter(item -> StringUtils.isNotEmpty(item.getSourceInfo())).collect(Collectors.toMap(VisualizationLinkJumpDTO::getSourceInfo, VisualizationLinkJumpDTO::getTargetInfoList)));
     }
 
+    /**
+     * 获取视图表详情列表
+     *
+     * @param dvId 仪表板ID
+     * @return 视图组件详情
+     */
     @Override
     public VisualizationComponentDTO viewTableDetailList(Long dvId) {
         DataVisualizationInfo dvInfo = dataVisualizationInfoMapper.selectById(dvId);
@@ -183,6 +233,12 @@ public class VisualizationLinkJumpService implements VisualizationLinkJumpApi {
 
     }
 
+    /**
+     * 更新跳转激活状态
+     *
+     * @param request 跳转请求
+     * @return 跳转信息
+     */
     @Override
     public VisualizationLinkJumpBaseResponse updateJumpSetActive(VisualizationLinkJumpBaseRequest request) {
         SnapshotCoreChartView coreChartView = new SnapshotCoreChartView();
@@ -192,6 +248,11 @@ public class VisualizationLinkJumpService implements VisualizationLinkJumpApi {
         return queryVisualizationJumpInfo(request.getSourceDvId(), CommonConstants.RESOURCE_TABLE.SNAPSHOT);
     }
 
+    /**
+     * 删除跳转配置
+     *
+     * @param jumpDTO 跳转配置
+     */
     @Override
     public void removeJumpSet(VisualizationLinkJumpDTO jumpDTO) {
         //清理原有数据

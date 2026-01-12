@@ -14,6 +14,16 @@ public class HeatMapHandler extends DefaultChartHandler {
     @Getter
     private String type = "heat-map";
 
+    /**
+     * 构建图表结果
+     * 将查询数据转换为热力图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的热力图数据
+     */
     @Override
     public Map<String, Object> buildResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult

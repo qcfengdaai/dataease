@@ -11,9 +11,20 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 /**
- * Xpack分享扩展Mapper接口
+ * 分享配置扩展Mapper
+ * <p>
+ * 提供分享功能的扩展查询操作
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>分页查询分享信息</li>
+ * <li>查询资源类型</li>
+ * <li>更新Ticket信息</li>
+ * <li>分页查询Ticket</li>
+ * </ul>
  *
- * 提供扩展的自定义查询方法，处理复杂的多表关联查询
+ * @author DataEase
+ * @since 2024-01-12
  */
 @Mapper
 public interface XpackShareExtMapper {

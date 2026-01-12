@@ -28,6 +28,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * 图表视图阈值管理类
+ * 负责图表阈值的转换、校验和数据过滤功能
+ * 支持图表监控告警的阈值配置和检查
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>阈值规则的格式转换</li>
+ *   <li>数据阈值校验和检查</li>
+ *   <li>基于阈值的数据行过滤</li>
+ *   <li>字段与阈值的匹配处理</li>
+ * </ul>
+ *
+ * @author Junjun
+ */
 @Component("chartViewThresholdManage")
 public class ChartViewThresholdManage {
 
@@ -36,6 +51,15 @@ public class ChartViewThresholdManage {
     private ChartViewManege chartViewManege;
 
 
+    /**
+     * 转换阈值规则
+     * 将阈值规则从字段ID转换为字段名称，便于后续处理
+     *
+     * @param chartId 图表ID
+     * @param thresholdRules 阈值规则JSON字符串
+     * @param resourceTable 资源表类型
+     * @return 转换后的阈值规则JSON字符串
+     */
     public String convertThresholdRules(Long chartId, String thresholdRules, String resourceTable) {
         ChartViewDTO details = chartViewManege.getDetails(chartId, resourceTable);
         return convertThresholdRules(details, thresholdRules);
@@ -250,6 +274,14 @@ public class ChartViewThresholdManage {
         return htmlString;
     }
 
+    /**
+     * 检查阈值
+     * 对图表数据应用阈值规则，检查是否满足阈值条件
+     *
+     * @param request 阈值检查请求，包含图表ID、数据和阈值规则
+     * @return 阈值检查结果，包含满足条件的数据行
+     * @throws Exception 检查异常
+     */
     public ThresholdCheckVO checkThreshold(ThresholdCheckRequest request) throws Exception {
         String thresholdTemplate = request.getThresholdTemplate();
         String thresholdRules = request.getThresholdRules();
@@ -546,6 +578,15 @@ public class ChartViewThresholdManage {
         return String.valueOf(tempFVal);
     }
 
+    /**
+     * 过滤数据行
+     * 根据条件树过滤数据行，返回满足条件的数据
+     *
+     * @param rows 原始数据行列表
+     * @param conditionTree 过滤条件树
+     * @param fieldMap 字段ID到字段DTO的映射
+     * @return 满足条件的数据行列表
+     */
     public List<Map<String, Object>> filterRows(List<Map<String, Object>> rows, FilterTreeObj conditionTree, Map<Long, DatasetTableFieldDTO> fieldMap) {
         chartDynamicMap(rows, conditionTree, fieldMap);
         List<Map<String, Object>> filteredRows = new ArrayList<>();

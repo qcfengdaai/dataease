@@ -11,6 +11,13 @@ public class BubbleMapHandler extends ExtQuotaChartHandler {
     @Getter
     private String type = "bubble-map";
 
+    /**
+     * 格式化坐标轴
+     * 使用父类的坐标轴格式化逻辑
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         return super.formatAxis(view);

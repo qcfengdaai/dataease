@@ -26,8 +26,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author : WangJiaHao
- * @date : 2023/7/13
+ * 可视化图表联动服务
+ * <p>
+ * 处理仪表板中图表之间的联动关系
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>保存图表联动配置</li>
+ * <li>查询图表联动关系</li>
+ * <li>更新联动激活状态</li>
+ * <li>删除联动配置</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
  */
 @RestController
 @RequestMapping("linkage")
@@ -57,6 +69,12 @@ public class VisualizationLinkageService implements VisualizationLinkageApi {
     @Resource
     private SnapshotCoreChartViewMapper snapshotCoreChartViewMapper;
 
+    /**
+     * 获取视图联动信息集合
+     *
+     * @param request 联动请求
+     * @return 视图ID到联动信息的映射
+     */
     @Override
     public Map<String, VisualizationLinkageDTO> getViewLinkageGather(VisualizationLinkageRequest request) {
         if (CollectionUtils.isNotEmpty(request.getTargetViewIds())) {
@@ -71,6 +89,12 @@ public class VisualizationLinkageService implements VisualizationLinkageApi {
         return new HashMap<>();
     }
 
+    /**
+     * 获取视图联动信息列表
+     *
+     * @param request 联动请求
+     * @return 联动信息列表
+     */
     @Override
     public List<VisualizationLinkageDTO> getViewLinkageGatherArray(VisualizationLinkageRequest request) {
         if (CommonConstants.RESOURCE_TABLE.SNAPSHOT.equals(request.getResourceTable())) {
@@ -80,6 +104,14 @@ public class VisualizationLinkageService implements VisualizationLinkageApi {
         }
     }
 
+    /**
+     * 保存图表联动配置
+     * <p>
+     * 会清除原有联动关系，然后建立新的联动关系
+     *
+     * @param request 联动配置请求
+     * @return 操作响应
+     */
     @Override
     @Transactional
     public BaseRspModel saveLinkage(VisualizationLinkageRequest request) {
@@ -126,6 +158,13 @@ public class VisualizationLinkageService implements VisualizationLinkageApi {
         return new BaseRspModel();
     }
 
+    /**
+     * 获取仪表板的所有联动信息
+     *
+     * @param dvId         仪表板ID
+     * @param resourceTable 资源表（core或snapshot）
+     * @return 联动信息映射
+     */
     @DeLinkPermit
     @Override
     public Map<String, List<String>> getVisualizationAllLinkageInfo(Long dvId, String resourceTable) {
@@ -138,6 +177,12 @@ public class VisualizationLinkageService implements VisualizationLinkageApi {
         return Optional.ofNullable(info).orElse(new ArrayList<>()).stream().collect(Collectors.toMap(LinkageInfoDTO::getSourceInfo, LinkageInfoDTO::getTargetInfoList));
     }
 
+    /**
+     * 更新联动激活状态
+     *
+     * @param request 联动请求
+     * @return 所有联动信息
+     */
     @Override
     public Map updateLinkageActive(VisualizationLinkageRequest request) {
         SnapshotCoreChartView coreChartView = new SnapshotCoreChartView();
@@ -147,6 +192,11 @@ public class VisualizationLinkageService implements VisualizationLinkageApi {
         return getVisualizationAllLinkageInfo(request.getDvId(),CommonConstants.RESOURCE_TABLE.SNAPSHOT);
     }
 
+    /**
+     * 删除图表联动配置
+     *
+     * @param request 联动请求
+     */
     @Override
     public void removeLinkage(VisualizationLinkageRequest request) {
         // 清理原有关系

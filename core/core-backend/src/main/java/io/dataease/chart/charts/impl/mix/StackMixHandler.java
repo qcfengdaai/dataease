@@ -13,6 +13,13 @@ public class StackMixHandler extends MixHandler {
     @Getter
     private final String type = "chart-mix-stack";
 
+    /**
+     * 格式化坐标轴
+     * 处理堆叠混合图的坐标轴配置，包括左轴堆叠和右轴的配置
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含左轴堆叠、右轴的完整配置
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var axisMap = new HashMap<ChartAxis, List<ChartViewFieldDTO>>();
@@ -46,6 +53,16 @@ public class StackMixHandler extends MixHandler {
         return result;
     }
 
+    /**
+     * 构建标准图表结果
+     * 将查询数据转换为堆叠混合图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的堆叠混合图数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult

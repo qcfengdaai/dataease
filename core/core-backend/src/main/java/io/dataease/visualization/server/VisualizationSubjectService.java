@@ -22,8 +22,20 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * @author : WangJiaHao
- * @date : 2023/6/9 18:41
+ * 可视化主题服务
+ * <p>
+ * 管理可视化主题（配色方案等）
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>查询主题列表</li>
+ * <li>创建或更新主题</li>
+ * <li>删除主题</li>
+ * <li>按分组查询主题</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
  */
 @RestController
 @RequestMapping("/visualizationSubject")
@@ -31,6 +43,12 @@ public class VisualizationSubjectService implements VisualizationSubjectApi {
 
     @Resource
     VisualizationSubjectMapper subjectMapper;
+    /**
+     * 查询主题列表
+     *
+     * @param request 查询请求
+     * @return 主题列表
+     */
     @Override
     public List<VisualizationSubjectVO> query(VisualizationSubjectRequest request) {
         QueryWrapper<VisualizationSubject> wrapper = new QueryWrapper<>();
@@ -43,6 +61,14 @@ public class VisualizationSubjectService implements VisualizationSubjectApi {
        }).collect(Collectors.toList());
     }
 
+    /**
+     * 按分组查询主题
+     * <p>
+     * 每个分组最多返回4个主题
+     *
+     * @param request 查询请求
+     * @return 分组主题列表
+     */
     @Override
     public List querySubjectWithGroup(VisualizationSubjectRequest request) {
         List result = new ArrayList();
@@ -56,6 +82,13 @@ public class VisualizationSubjectService implements VisualizationSubjectApi {
         }
         return result;
     }
+    /**
+     * 创建或更新主题
+     * <p>
+     * 如果ID为空则创建新主题，否则更新现有主题
+     *
+     * @param request 主题请求
+     */
     @Override
     public synchronized void update(VisualizationSubjectRequest request) {
         if (StringUtils.isEmpty(request.getId())) {
@@ -89,6 +122,11 @@ public class VisualizationSubjectService implements VisualizationSubjectApi {
         }
     }
 
+    /**
+     * 删除主题
+     *
+     * @param id 主题ID
+     */
     @Override
     public void delete(String id) {
         Assert.notNull(id, "subjectId should not be null");

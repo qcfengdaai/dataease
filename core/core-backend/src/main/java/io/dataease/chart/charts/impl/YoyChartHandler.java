@@ -25,6 +25,15 @@ import java.util.stream.Stream;
  * 带同环比计算的图表处理器
  */
 public class YoyChartHandler extends DefaultChartHandler {
+    /**
+     * 自定义过滤器处理
+     * 处理同环比图表的过滤器，将同环比时间过滤条件往前推一年
+     *
+     * @param view 图表视图信息
+     * @param filterList 过滤条件列表
+     * @param formatResult 坐标轴格式化结果
+     * @return 自定义过滤结果，包含原始过滤条件和同环比过滤标识
+     */
     @Override
     public <T extends CustomFilterResult> T customFilter(ChartViewDTO view, List<ChartExtFilterDTO> filterList, AxisFormatResult formatResult) {
         var result = super.customFilter(view, filterList, formatResult);
@@ -42,6 +51,16 @@ public class YoyChartHandler extends DefaultChartHandler {
         return (T) result;
     }
 
+    /**
+     * 构建图表结果
+     * 根据是否设置了同环比过滤来决定返回原始数据还是标准数据
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的图表数据
+     */
     @Override
     public Map<String, Object> buildResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         var yoyFiltered = filterResult.getContext().get("yoyFiltered") != null;
@@ -67,6 +86,18 @@ public class YoyChartHandler extends DefaultChartHandler {
         return super.buildResult(view, formatResult, filterResult, data);
     }
 
+    /**
+     * 计算图表数据结果
+     * 执行同环比图表的数据计算，处理同环比过滤后的数据匹配
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param sqlMap SQL相关映射（包含数据源信息）
+     * @param sqlMeta SQL元数据对象
+     * @param provider 数据源提供者
+     * @return 图表计算结果，包含同环比计算后的数据
+     */
     @Override
     public <T extends ChartCalcDataResult> T calcChartResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, Map<String, Object> sqlMap, SQLMeta sqlMeta, Provider provider) {
         var dsMap = (Map<Long, DatasourceSchemaDTO>) sqlMap.get("dsMap");
@@ -126,6 +157,15 @@ public class YoyChartHandler extends DefaultChartHandler {
         return expandedResult;
     }
 
+    /**
+     * 对数据进行排序
+     * 根据视图配置的维度和指标排序规则对数据进行排序
+     *
+     * @param view 图表视图信息，包含排序配置
+     * @param data 待排序的数据
+     * @param formatResult 坐标轴格式化结果
+     * @return 排序后的数据列表
+     */
     public static List<String[]> sortData(ChartViewDTO view, List<String[]> data, AxisFormatResult formatResult) {
         // 维度排序
         List<ChartViewFieldDTO> xAxisSortList = view.getXAxis().stream().filter(x -> !StringUtils.equalsIgnoreCase("none", x.getSort())).toList();
@@ -154,6 +194,15 @@ public class YoyChartHandler extends DefaultChartHandler {
 
     }
 
+    /**
+     * 根据指定列进行数据排序
+     * 按照指定索引的列值进行升序或降序排序
+     *
+     * @param data 待排序的数据
+     * @param ascending 是否升序排列
+     * @param index 排序依据的列索引
+     * @return 排序后的数据列表
+     */
     public static List<String[]> sortData(List<String[]> data, boolean ascending, int index) {
         Comparator<String[]> comparator;
         if (ascending) {
@@ -175,6 +224,14 @@ public class YoyChartHandler extends DefaultChartHandler {
         }
     }
 
+    /**
+     * 查找字段在列表中的索引
+     * 根据字段ID查找其在字段列表中的位置
+     *
+     * @param list 字段列表
+     * @param id 字段ID
+     * @return 字段索引，未找到返回-1
+     */
     public static int findIndex(List<ChartViewFieldDTO> list, Long id) {
         for (int i = 0; i < list.size(); i++) {
             if (StringUtils.equalsIgnoreCase(list.get(i).getId().toString(), id.toString())) {

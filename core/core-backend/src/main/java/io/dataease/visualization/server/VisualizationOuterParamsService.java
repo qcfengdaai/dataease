@@ -32,8 +32,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author : WangJiaHao
- * @date : 2024/3/11 09:44
+ * 可视化外部参数服务
+ * <p>
+ * 处理仪表板的外部参数配置
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>配置外部参数</li>
+ * <li>查询外部参数信息</li>
+ * <li>查询关联的数据集和字段</li>
+ * <li>支持SQL变量作为外部参数</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
  */
 @RestController
 @RequestMapping("outerParams")
@@ -66,12 +78,25 @@ public class VisualizationOuterParamsService implements VisualizationOuterParams
     private SnapshotDataVisualizationInfoMapper snapshotDataVisualizationInfoMapper;
 
 
+    /**
+     * 根据仪表板ID查询外部参数配置
+     *
+     * @param visualizationId 仪表板ID
+     * @return 外部参数配置
+     */
     @Override
     public VisualizationOuterParamsDTO queryWithVisualizationId(String visualizationId) {
         VisualizationOuterParamsDTO visualizationOuterParamsDTO = extOuterParamsMapper.queryWithVisualizationIdSnapshot(visualizationId);
         return visualizationOuterParamsDTO;
     }
 
+    /**
+     * 更新外部参数配置
+     * <p>
+     * 会清除原有配置，然后保存新的配置
+     *
+     * @param outerParamsDTO 外部参数配置
+     */
     @Override
     public void updateOuterParamsSet(VisualizationOuterParamsDTO outerParamsDTO) {
         String visualizationId = outerParamsDTO.getVisualizationId();
@@ -119,6 +144,12 @@ public class VisualizationOuterParamsService implements VisualizationOuterParams
 
     }
 
+    /**
+     * 获取外部参数信息
+     *
+     * @param visualizationId 仪表板ID
+     * @return 外部参数信息
+     */
     @DeLinkPermit
     @Override
     public VisualizationOuterParamsBaseResponse getOuterParamsInfo(String visualizationId) {
@@ -128,6 +159,19 @@ public class VisualizationOuterParamsService implements VisualizationOuterParams
         );
     }
 
+    /**
+     * 查询仪表板关联的数据集和字段
+     * <p>
+     * 包括:
+     * <ul>
+     * <li>数据集分组信息</li>
+     * <li>数据集字段列表</li>
+     * <li>SQL变量（作为外部参数）</li>
+     * </ul>
+     *
+     * @param visualizationId 仪表板ID
+     * @return 数据集信息列表
+     */
     @Override
     public List<CoreDatasetGroupVO> queryDsWithVisualizationId(String visualizationId) {
         List<CoreDatasetGroupVO> result = extOuterParamsMapper.queryDsWithVisualizationId(visualizationId);

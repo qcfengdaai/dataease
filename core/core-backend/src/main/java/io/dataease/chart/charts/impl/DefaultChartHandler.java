@@ -48,6 +48,22 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+/**
+ * 默认图表处理器
+ * 提供通用的图表数据处理逻辑，作为所有图表类型的默认处理器
+ * 实现AbstractChartPlugin接口，处理大多数常见图表类型的数据计算
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>图表数据的计算和格式化</li>
+ *   <li>坐标轴数据处理</li>
+ *   <li>SQL构建和执行</li>
+ *   <li>数据权限过滤</li>
+ *   <li>图表配置的序列化</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @Component
 public class DefaultChartHandler extends AbstractChartPlugin {
     public static Logger logger = LoggerFactory.getLogger(ChartDataManage.class);

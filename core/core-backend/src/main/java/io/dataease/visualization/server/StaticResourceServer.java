@@ -33,28 +33,67 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 静态资源服务
+ * <p>
+ * 处理静态资源（主要是图片）的上传、保存和查询
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>上传图片文件并验证格式</li>
+ * <li>保存Base64编码的静态资源</li>
+ * <li>查询静态资源并转换为Base64</li>
+ * <li>验证SVG内容安全性</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
+ */
 @RestController
 @RequestMapping("/staticResource")
 public class StaticResourceServer implements StaticResourceApi {
 
+    /**
+     * 静态资源存储目录
+     * 默认值: /opt/dataease2.0/data/static-resource/
+     */
     @Value("${dataease.path.static-resource:/opt/dataease2.0/data/static-resource/}")
     private String staticDir;
 
+    /**
+     * 上传静态资源文件
+     * <p>
+     * 支持的格式：JPEG、PNG、GIF、SVG
+     * <p>
+     * 上传流程：
+     * <ol>
+     * <li>验证文件是否为图片</li>
+     * <li>生成新文件名（fileId + 原扩展名）</li>
+     * <li>保存到静态资源目录</li>
+     * </ol>
+     *
+     * @param fileId 文件ID
+     * @param file   上传的文件
+     */
     @Override
     public void upload(String fileId, MultipartFile file) {
-        // check if the path is valid (not outside staticDir)
+        // 检查文件是否为空
         Assert.notNull(file, "Multipart file must not be null");
         try {
+            // 验证是否为图片格式
             if (!isImage(file)) {
                 DEException.throwException("Multipart file must be image");
             }
+            // 获取原始文件名
             String originName = file.getOriginalFilename();
+            // 生成新文件名（fileId + 原扩展名）
             String newFileName = fileId + originName.substring(originName.lastIndexOf("."), originName.length());
             Path basePath = Paths.get(staticDir.toString());
-            // create dir is absent
+            // 如果目录不存在则创建
             FileUtils.createIfAbsent(basePath);
             Path uploadPath = basePath.resolve(newFileName);
             Files.createFile(uploadPath);
+            // 保存文件
             file.transferTo(uploadPath);
         } catch (IOException e) {
             LogUtil.error("文件上传失败", e);
@@ -64,6 +103,20 @@ public class StaticResourceServer implements StaticResourceApi {
         }
     }
 
+    /**
+     * 验证文件是否为图片
+     * <p>
+     * 验证步骤：
+     * <ol>
+     * <li>检查文件是否为空</li>
+     * <li>检查MIME类型</li>
+     * <li>检查文件扩展名</li>
+     * <li>验证图片内容或SVG格式</li>
+     * </ol>
+     *
+     * @param file 待验证的文件
+     * @return 如果是图片返回true，否则返回false
+     */
     private boolean isImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return false;

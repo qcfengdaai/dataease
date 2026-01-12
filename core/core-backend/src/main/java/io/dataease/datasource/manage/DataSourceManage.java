@@ -37,6 +37,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * 数据源管理类
+ * 负责数据源的增删改查和树形结构管理
+ * 协调数据源、驱动、引擎等多个子模块完成数据源的完整生命周期管理
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>数据源的创建、编辑、删除</li>
+ *   <li>数据源树形结构查询</li>
+ *   <li>数据源连接测试</li>
+ *   <li>数据源状态监控</li>
+ *   <li>权限树集成</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @Component
 public class DataSourceManage {
 

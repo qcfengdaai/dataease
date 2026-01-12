@@ -19,7 +19,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @Author Junjun
+ * 图表视图旧数据迁移服务类
+ * 负责将旧版本的过滤器数据结构迁移到新的树形结构
+ * 用于系统升级时的数据格式兼容处理
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>将过滤器列表转换为树形结构</li>
+ *   <li>批量迁移历史视图数据</li>
+ *   <li>数据格式兼容性处理</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Service
 public class ChartViewOldDataMergeService {
@@ -28,7 +39,9 @@ public class ChartViewOldDataMergeService {
     private CoreChartViewMapper coreChartViewMapper;
 
     /**
-     * 视图过滤器重构，合并老数据，将list变成tree
+     * 迁移旧数据
+     * 将所有图表视图的旧过滤器格式（list）迁移到新格式（tree）
+     * 旧的list格式中每个字段是一个item，新的tree格式将字段组织成树形结构
      */
     public void mergeOldData() {
         // 获取所有视图数据
@@ -71,6 +84,13 @@ public class ChartViewOldDataMergeService {
         }
     }
 
+    /**
+     * 将数组格式转换为对象格式
+     * 将旧版本的过滤器列表转换为新的树形结构对象
+     *
+     * @param fieldCustomFilter 旧版本的字段自定义过滤器列表
+     * @return 新的树形过滤器对象
+     */
     public FilterTreeObj transArr2Obj(List<ChartFieldCustomFilterDTO> fieldCustomFilter) {
         FilterTreeObj tree = new FilterTreeObj();
         tree.setItems(new ArrayList<>());

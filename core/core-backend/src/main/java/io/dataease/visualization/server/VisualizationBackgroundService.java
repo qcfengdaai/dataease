@@ -16,8 +16,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author : WangJiaHao
- * @date : 2023/6/12 19:31
+ * 可视化背景服务
+ * <p>
+ * 管理仪表板背景样式
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>查询所有背景样式</li>
+ * <li>按分类返回背景样式</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
  */
 @RestController
 @RequestMapping("/visualizationBackground")
@@ -25,6 +35,13 @@ public class VisualizationBackgroundService implements VisualizationBackgroundAp
     @Resource
     VisualizationBackgroundMapper mapper;
 
+    /**
+     * 查询所有背景样式
+     * <p>
+     * 背景按分类进行分组返回
+     *
+     * @return 分类到背景列表的映射
+     */
     @Override
     public Map<String, List<VisualizationBackgroundVO>> findAll() {
         List<VisualizationBackground> result = mapper.selectList(new QueryWrapper<>());

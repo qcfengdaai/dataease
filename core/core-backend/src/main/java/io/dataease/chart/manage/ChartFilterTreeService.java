@@ -21,13 +21,30 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 图表过滤树服务类
+ * 负责图表过滤条件的字段查询和字符替换处理
+ * 协调字段信息和过滤树对象之间的关系
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>过滤树字段查询和设置</li>
+ *   <li>关键字字符的转义处理</li>
+ *   <li>字段参数和分组信息的加载</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Service
 public class ChartFilterTreeService {
     @Resource
     private CoreDatasetTableFieldMapper coreDatasetTableFieldMapper;
 
+    /**
+     * 搜索字段并设置到过滤树
+     * 递归遍历过滤树，为每个字段项加载完整的字段信息
+     *
+     * @param tree 过滤树对象，包含字段ID和过滤条件
+     */
     public void searchFieldAndSet(FilterTreeObj tree) {
         if (ObjectUtils.isNotEmpty(tree)) {
             if (ObjectUtils.isNotEmpty(tree.getItems())) {
@@ -59,6 +76,13 @@ public class ChartFilterTreeService {
         }
     }
 
+    /**
+     * 字符替换处理
+     * 对过滤树中的值和枚举值进行关键字转义处理，防止SQL注入
+     *
+     * @param tree 过滤树对象
+     * @return 处理后的过滤树对象
+     */
     public FilterTreeObj charReplace(FilterTreeObj tree) {
         if (ObjectUtils.isNotEmpty(tree)) {
             if (ObjectUtils.isNotEmpty(tree.getItems())) {

@@ -14,6 +14,13 @@ import java.util.Optional;
 public class FlowMapHandler extends GroupChartHandler {
     @Getter
     private String type = "flow-map";
+    /**
+     * 格式化坐标轴
+     * 处理流向图的坐标轴配置，包括起始位置和结束位置字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含起始位置和结束位置字段
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);

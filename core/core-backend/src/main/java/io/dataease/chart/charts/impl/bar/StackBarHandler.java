@@ -12,10 +12,29 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * 堆叠柱状图处理器
+ * 负责堆叠柱状图的数据处理和渲染
+ * 继承BarHandler，支持多系列堆叠显示
+ *
+ * <p>支持的图表类型：</p>
+ * <ul>
+ *   <li>堆叠柱状图 (bar-stack)</li>
+ *   <li>水平堆叠柱状图 (bar-stack-horizontal)</li>
+ *   <li>百分比堆叠柱状图 (percentage-bar-stack)</li>
+ *   <li>水平百分比堆叠柱状图 (percentage-bar-stack-horizontal)</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @Component
 public class StackBarHandler extends BarHandler {
     @Getter
     private String type = "bar-stack";
+    /**
+     * 初始化处理器
+     * 注册堆叠柱状图、水平堆叠柱状图、百分比堆叠柱状图和水平百分比堆叠柱状图的处理器
+     */
     @Override
     public void init() {
         chartHandlerManager.registerChartHandler(this.getRender(), "bar-stack", this);
@@ -23,6 +42,13 @@ public class StackBarHandler extends BarHandler {
         chartHandlerManager.registerChartHandler(this.getRender(), "percentage-bar-stack", this);
         chartHandlerManager.registerChartHandler(this.getRender(), "percentage-bar-stack-horizontal", this);
     }
+    /**
+     * 格式化坐标轴
+     * 处理堆叠柱状图的坐标轴配置，包括堆叠字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含堆叠字段配置
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);
@@ -31,6 +57,15 @@ public class StackBarHandler extends BarHandler {
         result.getAxisMap().put(ChartAxis.extStack, view.getExtStack());
         return result;
     }
+    /**
+     * 自定义过滤器处理
+     * 处理堆叠维度下钻的过滤逻辑
+     *
+     * @param view 图表视图信息
+     * @param filterList 过滤条件列表
+     * @param formatResult 坐标轴格式化结果
+     * @return 自定义过滤结果，包含下钻后的过滤条件
+     */
     @Override
     public <T extends CustomFilterResult> T customFilter(ChartViewDTO view, List<ChartExtFilterDTO> filterList, AxisFormatResult formatResult) {
         var result = super.customFilter(view, filterList, formatResult);
@@ -59,6 +94,16 @@ public class StackBarHandler extends BarHandler {
         }
         return (T) result;
     }
+    /**
+     * 构建标准图表结果
+     * 将查询数据转换为堆叠柱状图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的堆叠图表数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult.getFilterList().stream().anyMatch(ele -> ele.getFilterType() == 1);
