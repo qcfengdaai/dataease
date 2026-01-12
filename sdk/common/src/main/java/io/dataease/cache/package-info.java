@@ -12,15 +12,11 @@
  *   <li>{@link io.dataease.cache.DECacheService} - 缓存服务接口</li>
  * </ul>
  *
- * <h3>2. 缓存实现</h3>
+ * <h3>2. 接口说明</h3>
  * <ul>
- *   <li>{@link io.dataease.cache.impl.RedisCacheImpl} - Redis缓存实现</li>
- *   <li>{@link io.dataease.cache.impl.DefaultCacheImpl} - 本地缓存实现（Caffeine）</li>
- * </ul>
- *
- * <h3>3. 缓存注解</h3>
- * <ul>
- *   <li>{@link io.dataease.cache.annotation.CacheClear} - 缓存清除注解</li>
+ *   <li>该包当前只包含核心接口定义</li>
+ *   <li>具体的缓存实现（Redis、本地缓存等）由各模块自行提供</li>
+ *   <li>通过依赖注入的方式使用具体的缓存实现</li>
  * </ul>
  *
  * <h2>使用示例</h2>
@@ -31,14 +27,14 @@
  * public class DatasetService {
  *
  *     {@literal @}Resource
- *     private DECacheService cacheService;
+ *     private DECacheService&lt;Dataset&gt; cacheService;
  *
  *     public Dataset getById(Long id) {
- *         // 构造缓存key
+ *         String cacheName = "datasetCache";
  *         String cacheKey = "dataset:info:" + id;
  *
  *         // 先从缓存获取
- *         Dataset dataset = cacheService.get(cacheKey);
+ *         Dataset dataset = cacheService.get(cacheName, cacheKey);
  *         if (dataset != null) {
  *             return dataset;
  *         }
@@ -47,7 +43,7 @@
  *         dataset = datasetMapper.selectById(id);
  *
  *         // 写入缓存，过期时间1小时
- *         cacheService.set(cacheKey, dataset, 3600);
+ *         cacheService.put(cacheName, cacheKey, dataset, 1L, TimeUnit.HOURS);
  *
  *         return dataset;
  *     }
@@ -61,73 +57,105 @@
  *     datasetMapper.updateById(dataset);
  *
  *     // 清除缓存
+ *     String cacheName = "datasetCache";
  *     String cacheKey = "dataset:info:" + dataset.getId();
- *     cacheService.delete(cacheKey);
- *
- *     // 也可以使用通配符批量清除
- *     cacheService.deletePattern("dataset:*");
+ *     cacheService.keyRemove(cacheName, cacheKey);
  * }
  * </pre>
  *
- * <h3>示例3：使用注解清除缓存</h3>
+ * <h3>示例3：缓存存在性检查</h3>
  * <pre>
  * {@literal @}Service
- * public class DatasetService {
+ * public class CacheManagementService {
  *
- *     {@literal @}CacheClear(key = "dataset:info:#p0.id")
- *     public void updateDataset(Dataset dataset) {
- *         // 更新数据库
- *         datasetMapper.updateById(dataset);
- *         // 方法执行完自动清除缓存
+ *     {@literal @}Resource
+ *     private DECacheService&lt;Object&gt; cacheService;
+ *
+ *     public boolean isDataCached(String dataId) {
+ *         String cacheName = "dataCache";
+ *         String cacheKey = "data:info:" + dataId;
+ *
+ *         // 检查缓存空间是否存在
+ *         if (!cacheService.cacheExist(cacheName)) {
+ *             return false;
+ *         }
+ *
+ *         // 检查具体的键是否存在
+ *         return cacheService.keyExist(cacheName, cacheKey);
  *     }
  *
- *     {@literal @}CacheClear(pattern = "dataset:*")
- *     public void deleteDataset(Long id) {
- *         datasetMapper.deleteById(id);
- *         // 清除所有dataset相关缓存
+ *     public void clearExpiredCache() {
+ *         String cacheName = "tempCache";
+ *         String[] keys = {"temp:1", "temp:2", "temp:3"};
+ *
+ *         for (String key : keys) {
+ *             if (cacheService.keyExist(cacheName, key)) {
+ *                 cacheService.keyRemove(cacheName, key);
+ *             }
+ *         }
  *     }
  * }
  * </pre>
  *
  * <h3>示例4：缓存用户权限</h3>
  * <pre>
- * public List&lt;String&gt; getUserPermissions(Long userId) {
- *     String cacheKey = "auth:user:" + userId;
+ * {@literal @}Service
+ * public class UserPermissionService {
  *
- *     // 从缓存获取
- *     List&lt;String&gt; permissions = cacheService.get(cacheKey);
- *     if (permissions != null) {
+ *     {@literal @}Resource
+ *     private DECacheService&lt;List&lt;String&gt;&gt; cacheService;
+ *
+ *     public List&lt;String&gt; getUserPermissions(Long userId) {
+ *         String cacheName = "permissionCache";
+ *         String cacheKey = "auth:user:" + userId;
+ *
+ *         // 从缓存获取
+ *         List&lt;String&gt; permissions = cacheService.get(cacheName, cacheKey);
+ *         if (permissions != null) {
+ *             return permissions;
+ *         }
+ *
+ *         // 查询数据库
+ *         permissions = permissionMapper.selectByUserId(userId);
+ *
+ *         // 缓存，过期时间30分钟
+ *         cacheService.put(cacheName, cacheKey, permissions, 30L, TimeUnit.MINUTES);
+ *
  *         return permissions;
  *     }
- *
- *     // 查询数据库
- *     permissions = permissionMapper.selectByUserId(userId);
- *
- *     // 缓存，过期时间30分钟
- *     cacheService.set(cacheKey, permissions, 1800);
- *
- *     return permissions;
  * }
  * </pre>
  *
- * <h3>示例5：分布式锁</h3>
+ * <h3>示例5：缓存过期时间管理</h3>
  * <pre>
- * public void processTask(String taskId) {
- *     String lockKey = "lock:task:" + taskId;
+ * {@literal @}Service
+ * public class SessionService {
  *
- *     // 尝试获取锁
- *     boolean locked = cacheService.setIfAbsent(lockKey, "locked", 60);
+ *     {@literal @}Resource
+ *     private DECacheService&lt;String&gt; cacheService;
  *
- *     if (!locked) {
- *         throw new DEException("任务正在处理中");
+ *     public void createUserSession(String userId, String sessionToken) {
+ *         String cacheName = "sessionCache";
+ *         String cacheKey = "session:" + userId;
+ *
+ *         // 缓存会话令牌，过期时间2小时
+ *         cacheService.put(cacheName, cacheKey, sessionToken, 2L, TimeUnit.HOURS);
  *     }
  *
- *     try {
- *         // 处理任务
- *         doProcess(taskId);
- *     } finally {
- *         // 释放锁
- *         cacheService.delete(lockKey);
+ *     public boolean isSessionValid(String userId) {
+ *         String cacheName = "sessionCache";
+ *         String cacheKey = "session:" + userId;
+ *
+ *         // 检查会话是否还存在（未过期）
+ *         return cacheService.keyExist(cacheName, cacheKey);
+ *     }
+ *
+ *     public void logout(String userId) {
+ *         String cacheName = "sessionCache";
+ *         String cacheKey = "session:" + userId;
+ *
+ *         // 立即清除会话缓存
+ *         cacheService.keyRemove(cacheName, cacheKey);
  *     }
  * }
  * </pre>
@@ -203,8 +231,54 @@
  *   <li>注意序列化兼容性</li>
  * </ul>
  *
- * @author DataEase
+ * <h2>系统中的使用位置</h2>
+ *
+ * <h3>Core模块中的使用</h3>
+ * <ul>
+ *   <li><strong>用户会话管理</strong> - 缓存用户登录状态和会话信息</li>
+ *   <li><strong>权限缓存</strong> - 缓存用户权限和角色信息，减少数据库查询</li>
+ *   <li><strong>数据集缓存</strong> - 缓存数据集结构和查询结果</li>
+ *   <li><strong>图表配置缓存</strong> - 缓存图表配置信息，提高渲染性能</li>
+ *   <li><strong>仪表板缓存</strong> - 缓存仪表板布局和组件信息</li>
+ * </ul>
+ *
+ * <h3>SDK模块中的使用</h3>
+ * <ul>
+ *   <li><strong>认证模块</strong> - 缓存Token验证结果和用户认证状态</li>
+ *   <li><strong>数据处理模块</strong> - 缓存计算结果和临时数据</li>
+ *   <li><strong>API调用缓存</strong> - 缓存第三方API调用结果</li>
+ *   <li><strong>配置信息缓存</strong> - 缓存系统配置和应用设置</li>
+ * </ul>
+ *
+ * <h3>分布式环境中的使用</h3>
+ * <ul>
+ *   <li><strong>跨节点数据共享</strong> - 通过Redis实现多节点间的数据共享</li>
+ *   <li><strong>分布式锁</strong> - 配合具体实现可用于分布式锁机制</li>
+ *   <li><strong>集群同步</strong> - 集群环境下的配置和状态同步</li>
+ * </ul>
+ *
+ * <h2>接口实现建议</h2>
+ *
+ * <h3>实现类应考虑的特性</h3>
+ * <ul>
+ *   <li><strong>序列化机制</strong> - 选择合适的序列化方式（JSON、Protobuf等）</li>
+ *   <li><strong>异常处理</strong> - 优雅处理网络异常和连接失败</li>
+ *   <li><strong>性能监控</strong> - 提供缓存命中率和性能指标</li>
+ *   <li><strong>内存管理</strong> - 防止内存泄漏和缓存雪崩</li>
+ *   <li><strong>配置管理</strong> - 支持动态配置更新</li>
+ * </ul>
+ *
+ * <h3>推荐的实现方式</h3>
+ * <ul>
+ *   <li><strong>Redis实现</strong> - 适用于分布式环境和高并发场景</li>
+ *   <li><strong>本地缓存实现</strong> - 适用于单机环境和低延迟要求</li>
+ *   <li><strong>多级缓存</strong> - 结合本地缓存和分布式缓存的优势</li>
+ *   <li><strong>缓存降级</strong> - 在缓存不可用时自动降级到数据库查询</li>
+ * </ul>
+ *
+ * @author DataEase团队
  * @since 1.0.0
- * @see io.dataease.constant.CacheConstant
+ * @version 2.0.0
+ * @see java.util.concurrent.TimeUnit 时间单位枚举
  */
 package io.dataease.cache;
