@@ -1,9 +1,21 @@
 /**
- * 认证与权限控制包
+ * DataEase认证与权限控制包
  * <p>
- * 提供DataEase系统的认证（Authentication）和授权（Authorization）功能，
- * 包括用户登录、Token管理、权限验证、分享链接访问等核心安全机制。
+ * 提供DataEase系统完整的认证（Authentication）和授权（Authorization）功能，
+ * 包括用户登录、JWT Token管理、权限验证、分享链接访问、跨域配置等核心安全机制。
+ * 支持企业版和社区版的双重认证体系，提供灵活的权限控制和安全策略。
  * </p>
+ *
+ * <p><strong>核心特性：</strong></p>
+ * <ul>
+ *   <li><strong>多层认证体系</strong> - 支持主Token认证和社区版JWT二次验证</li>
+ *   <li><strong>灵活权限控制</strong> - 基于SpEL表达式的方法级权限控制</li>
+ *   <li><strong>分享链接支持</strong> - 无需登录的公开访问机制</li>
+ *   <li><strong>多因子认证</strong> - 支持MFA增强安全性</li>
+ *   <li><strong>跨域安全配置</strong> - 灵活的CORS策略管理</li>
+ *   <li><strong>桌面版适配</strong> - 特殊的桌面环境认证处理</li>
+ *   <li><strong>社区版兼容</strong> - 提供替代登录配置和简化认证</li>
+ * </ul>
  *
  * <h2>核心组件</h2>
  *
@@ -16,32 +28,32 @@
  *
  * <h3>2. 过滤器（Filter）</h3>
  * <ul>
- *   <li>{@link io.dataease.auth.filter.TokenFilter} - Token验证过滤器（企业版）</li>
- *   <li>{@link io.dataease.auth.filter.CommunityTokenFilter} - Token验证过滤器（社区版）</li>
- *   <li>{@link io.dataease.auth.filter.FilterConfig} - 过滤器配置</li>
+ *   <li>{@link io.dataease.auth.filter.TokenFilter} - 主Token认证过滤器，处理HTTP认证和白名单检查</li>
+ *   <li>{@link io.dataease.auth.filter.CommunityTokenFilter} - 社区版JWT二次验证过滤器</li>
+ *   <li>{@link io.dataease.auth.filter.FilterConfig} - 过滤器注册和配置管理</li>
  * </ul>
  *
  * <h3>3. 用户业务对象（BO）</h3>
  * <ul>
- *   <li>{@link io.dataease.auth.bo.TokenUserBO} - 登录用户信息</li>
- *   <li>{@link io.dataease.auth.bo.LinkTokenUserBO} - 分享链接用户信息</li>
+ *   <li>{@link io.dataease.auth.bo.TokenUserBO} - Token用户信息，包含用户ID和默认组织ID</li>
+ *   <li>{@link io.dataease.auth.bo.LinkTokenUserBO} - 分享链接临时用户信息载体</li>
  * </ul>
  *
  * <h3>4. 视图对象（VO）</h3>
  * <ul>
- *   <li>{@link io.dataease.auth.vo.TokenVO} - Token响应对象</li>
- *   <li>{@link io.dataease.auth.vo.MfaItem} - 多因素认证配置</li>
- *   <li>{@link io.dataease.auth.vo.InvalidPwdVO} - 密码失效信息</li>
+ *   <li>{@link io.dataease.auth.vo.TokenVO} - Token响应对象，包含Token、过期时间和认证信息</li>
+ *   <li>{@link io.dataease.auth.vo.MfaItem} - 多因子认证(MFA)配置和状态信息</li>
+ *   <li>{@link io.dataease.auth.vo.InvalidPwdVO} - 密码失效状态和有效期信息</li>
  * </ul>
  *
  * <h3>5. 配置类</h3>
  * <ul>
- *   <li>{@link io.dataease.auth.config.SubstituleLoginConfig} - 替代登录配置</li>
+ *   <li>{@link io.dataease.auth.config.SubstituleLoginConfig} - 替代登录配置，社区版密码管理</li>
  * </ul>
  *
- * <h3>6. 拦截器</h3>
+ * <h3>6. 拦截器与CORS配置</h3>
  * <ul>
- *   <li>{@link io.dataease.auth.interceptor.CorsConfig} - 跨域配置</li>
+ *   <li>{@link io.dataease.auth.interceptor.CorsConfig} - 跨域资源共享配置和API路径前缀管理</li>
  * </ul>
  *
  * <h2>认证流程</h2>
@@ -51,12 +63,19 @@
  * 1. 用户提交用户名密码到 /api/login
  * 2. 后端验证用户名密码（MD5加密）
  * 3. 验证通过后生成JWT Token
- * 4. 将Token返回给前端（TokenVO）
- * 5. 前端将Token存储在localStorage
+ * 4. 将Token返回给前端（TokenVO，包含token、过期时间、MFA信息等）
+ * 5. 前端将Token存储在localStorage或cookie
  * 6. 后续请求在Header中携带Token：Authorization: Bearer {token}
- * 7. TokenFilter拦截请求，验证Token有效性
- * 8. Token验证通过，解析用户信息并设置到ThreadLocal（AuthUtils）
- * 9. 请求处理完成后，清理ThreadLocal
+ * 7. TokenFilter拦截请求，执行以下验证流程：
+ *    a. HTTP方法验证（只允许GET、POST、OPTIONS、DELETE）
+ *    b. OPTIONS预检请求处理
+ *    c. 白名单检查（无需认证的接口直接放行）
+ *    d. 桌面版特殊处理（自动设置默认用户）
+ *    e. 分享链接Token验证（处理linkToken）
+ *    f. 普通Token验证（验证JWT有效性和用户信息）
+ * 8. CommunityTokenFilter执行JWT二次验证（仅社区版无许可证时）
+ * 9. Token验证通过，解析用户信息并设置到ThreadLocal（UserUtils.setUserInfo）
+ * 10. 请求处理完成后，在finally块中清理ThreadLocal（UserUtils.removeUser）
  * </pre>
  *
  * <h3>分享链接访问流程</h3>
@@ -314,11 +333,15 @@
  *   <li>批量权限查询使用IN查询</li>
  * </ul>
  *
- * @author DataEase
+ * @author DataEase团队
  * @since 1.0.0
- * @see io.dataease.auth.DePermit
- * @see io.dataease.auth.DeApiPath
- * @see io.dataease.auth.DeLinkPermit
- * @see io.dataease.utils.AuthUtils
+ * @version 2.0.0
+ * @see io.dataease.auth.DePermit 方法级权限控制注解
+ * @see io.dataease.auth.DeApiPath Controller级API路径定义注解
+ * @see io.dataease.auth.DeLinkPermit 分享链接访问许可注解
+ * @see io.dataease.auth.filter.TokenFilter 主Token认证过滤器
+ * @see io.dataease.auth.filter.CommunityTokenFilter 社区版JWT二次验证过滤器
+ * @see io.dataease.utils.AuthUtils 认证工具类
+ * @see io.dataease.utils.UserUtils 用户信息管理工具类
  */
 package io.dataease.auth;
