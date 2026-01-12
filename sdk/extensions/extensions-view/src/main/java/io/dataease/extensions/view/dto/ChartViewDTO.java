@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 图表视图DTO
+ * 用于表示完整的图表视图信息，继承自ChartViewBaseDTO
+ *
  * @Author gin
  */
 @Data

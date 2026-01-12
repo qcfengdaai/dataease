@@ -421,17 +421,11 @@ public class DataVisualizationServer implements DataVisualizationApi {
     @Override
     @Transactional
     public String saveCanvas(DataVisualizationBaseRequest request) throws Exception {
-        /*
-         * 发布兼容逻辑
-         * saveCanvas 为初次保存 包括 模板 应用 普通创建 所有变更操作都走snapshot表
-         * 1.如果是文件夹直接保存在主表中，如果是仪表板（数据大屏），主表和镜像表各保存一份 主表仅作为权限和预览控制此时主表状态为‘未发布’
-         * 2.编辑检查：如果存在未发布的仪表板snapshot，则默认加载snapshot进行编辑所有操作均为snapshot操作
-         * 3.发布（重新发布）：将snapshot表中的所有数据复制到主表中，同时变更主表状态为‘已发布’
-         * 4.如果对已发布的仪表板编辑并存在已保存的镜像，此时仪表板状态为‘已保存未发布’
-         */
+        // ========== 第一阶段：初始化变量 ==========
         boolean isAppSave = false;
         Long time = System.currentTimeMillis();
-        // 如果是应用 则新进行应用校验 数据集名称和 数据源名称校验
+
+        // ========== 第二阶段：如果是应用保存，进行数据集匹配 ==========
         VisualizationExport2AppVO appData = request.getAppData();
         Map<Long, Long> dsGroupIdMap = new HashMap<>();
         List<DatasetGroupInfoDTO> newDsGroupInfo = new ArrayList<>();
@@ -444,31 +438,36 @@ public class DataVisualizationServer implements DataVisualizationApi {
         List<Long> newDatasourceId = new ArrayList<>();
         List<Long> excelDatasourceId = new ArrayList<>();
         Map<String, String> excelTableNamesMap = new HashMap<>();
+
         if (appData != null) {
             isAppSave = true;
             if ("dataset".equals(request.getDataType())) {
+                // 2.1 使用现有数据集，进行ID映射匹配
                 appDatasetMatch(appData, datasourceIdMap, dsGroupIdMap, dsTableIdMap, dsTableFieldsIdMap,dsTableFieldsDatasetNameMap);
             } else {
+                // 2.2 创建新数据集
                 try {
+                    // 2.2.1 处理数据源信息和Excel表名映射
                     List<AppCoreDatasourceVO> appCoreDatasourceVO = appData.getDatasourceInfo();
-                    //  app 数据源 excel 表名映射
                     appCoreDatasourceVO.forEach(datasourceOld -> {
                         newDatasourceId.add(datasourceOld.getSystemDatasourceId());
-                        // Excel 数据表明映射
+                        // 检查数据源类型，不支持API类型
                         if (StringUtils.isNotEmpty(datasourceOld.getConfiguration())) {
                             if (datasourceOld.getType().equals(DatasourceConfiguration.DatasourceType.API.name())) {
                                 DEException.throwException(Translator.get("i18n_app_error_no_api"));
                             } else if (datasourceOld.getType().equals(DatasourceConfiguration.DatasourceType.Excel.name())) {
+                                // Excel数据源，建立表名映射
                                 dsTableNamesMap.put(datasourceOld.getId(), ExcelUtils.getTableNamesMap(datasourceOld.getType(), datasourceOld.getConfiguration()));
                             } else if (datasourceOld.getType().contains(DatasourceConfiguration.DatasourceType.API.name())) {
+                                // 其他API类型数据源
                                 dsTableNamesMap.put(datasourceOld.getId(), (Map<String, String>) datasourceServer.invokeMethod(datasourceOld.getType(), "getTableNamesMap", String.class, datasourceOld.getConfiguration()));
                             }
                         }
                     });
 
+                    // 2.2.2 查询系统数据源信息
                     List<CoreDatasource> systemDatasource = coreDatasourceMapper.selectBatchIds(newDatasourceId);
                     systemDatasource.forEach(datasourceNew -> {
-                        // Excel 数据表明映射
                         if (StringUtils.isNotEmpty(datasourceNew.getConfiguration())) {
                             if (datasourceNew.getType().equals(DatasourceConfiguration.DatasourceType.Excel.name())) {
                                 dsTableNamesMap.put(datasourceNew.getId(), ExcelUtils.getTableNamesMap(datasourceNew.getType(), datasourceNew.getConfiguration()));
@@ -478,17 +477,21 @@ public class DataVisualizationServer implements DataVisualizationApi {
                             }
                         }
                     });
+
+                    // 2.2.3 建立数据源ID映射
                     datasourceIdMap.putAll(appData.getDatasourceInfo().stream().collect(Collectors.toMap(AppCoreDatasourceVO::getId, AppCoreDatasourceVO::getSystemDatasourceId)));
+
+                    // 2.2.4 创建数据集文件夹
                     Long datasetFolderPid = request.getDatasetFolderPid();
                     String datasetFolderName = request.getDatasetFolderName();
-                    //新建数据集分组
                     DatasetGroupInfoDTO datasetFolderNewRequest = new DatasetGroupInfoDTO();
                     datasetFolderNewRequest.setName(datasetFolderName);
                     datasetFolderNewRequest.setNodeType("folder");
                     datasetFolderNewRequest.setPid(datasetFolderPid);
                     DatasetGroupInfoDTO datasetFolderNew = datasetGroupManage.save(datasetFolderNewRequest, false, false);
                     Long datasetFolderNewId = datasetFolderNew.getId();
-                    //新建数据集
+
+                    // 2.2.5 创建新数据集
                     appData.getDatasetGroupsInfo().forEach(appDatasetGroup -> {
                         if ("dataset".equals(appDatasetGroup.getNodeType())) {
                             Long oldId = appDatasetGroup.getId();
@@ -508,9 +511,9 @@ public class DataVisualizationServer implements DataVisualizationApi {
                                 throw new RuntimeException(e);
                             }
                         }
-
                     });
-                    // 新建数据集表
+
+                    // 2.2.6 创建数据集表
                     appData.getDatasetTablesInfo().forEach(appCoreDatasetTableVO -> {
                         Long oldId = appCoreDatasetTableVO.getId();
                         Long newId = IDUtils.snowID();
@@ -521,9 +524,9 @@ public class DataVisualizationServer implements DataVisualizationApi {
                         datasetTable.setDatasourceId(datasourceIdMap.get(datasetTable.getDatasourceId()));
                         coreDatasetTableMapper.insert(datasetTable);
                         dsTableIdMap.put(oldId, newId);
-
                     });
-                    // 新建数据字段
+
+                    // 2.2.7 创建数据集字段
                     appData.getDatasetTableFieldsInfo().forEach(appDsTableFields -> {
                         Long oldId = appDsTableFields.getId();
                         Long newId = IDUtils.snowID();
@@ -537,7 +540,7 @@ public class DataVisualizationServer implements DataVisualizationApi {
                         dsTableFieldsIdMap.put(oldId, newId);
                     });
 
-                    // dsTableFields 中存在计算字段在OriginName中 也需要替换
+                    // 2.2.8 处理计算字段中的ID替换
                     dsTableFieldsList.forEach(dsTableFields -> {
                         dsTableFieldsIdMap.forEach((key, value) -> {
                             dsTableFields.setOriginName(dsTableFields.getOriginName().replaceAll(key.toString(), value.toString()));
@@ -545,20 +548,20 @@ public class DataVisualizationServer implements DataVisualizationApi {
                         coreDatasetTableFieldMapper.insert(dsTableFields);
                     });
 
+                    // 2.2.9 持久化数据集信息
                     List<String> dsGroupNameSave = new ArrayList<>();
-                    // 持久化数据集
                     newDsGroupInfo.forEach(dsGroup -> {
+                        // 2.2.9.1 替换数据集信息中的数据集表ID
                         dsTableIdMap.forEach((key, value) -> {
                             dsGroup.setInfo(dsGroup.getInfo().replaceAll(key.toString(), value.toString()));
                         });
-
+                        // 2.2.9.2 替换数据集信息中的字段ID
                         dsTableFieldsIdMap.forEach((key, value) -> {
                             dsGroup.setInfo(dsGroup.getInfo().replaceAll(key.toString(), value.toString()));
                         });
-
+                        // 2.2.9.3 替换数据集信息中的数据源ID和表名
                         datasourceIdMap.forEach((key, value) -> {
                             dsGroup.setInfo(dsGroup.getInfo().replaceAll(key.toString(), value.toString()));
-                            //表名映射更新
                             Map<String, String> appDsTableNamesMap = dsTableNamesMap.get(key);
                             Map<String, String> systemDsTableNamesMap = dsTableNamesMap.get(value);
                             if (MapUtils.isNotEmpty(appDsTableNamesMap)) {
@@ -571,12 +574,13 @@ public class DataVisualizationServer implements DataVisualizationApi {
                                     }
                                 });
                             }
-
                         });
+                        // 2.2.9.4 处理重名问题
                         if (dsGroupNameSave.contains(dsGroup.getName())) {
                             dsGroup.setName(dsGroup.getName() + "-" + UUID.randomUUID().toString());
                         }
                         dsGroupNameSave.add(dsGroup.getName());
+                        // 2.2.9.5 处理跨数据源关联
                         if (dsGroup.getIsCross() == null) {
                             if (dsGroup.getUnion() == null) {
                                 dsGroup.setUnion(JsonUtil.parseList(dsGroup.getInfo(), new TypeReference<>() {
@@ -584,7 +588,9 @@ public class DataVisualizationServer implements DataVisualizationApi {
                             }
                             datasetSQLManage.mergeDatasetCrossDefault(dsGroup);
                         }
+                        // 2.2.9.6 Excel数据适配
                         excelAdaptor(dsGroup, excelTableNamesMap, excelDatasourceId);
+                        // 2.2.9.7 保存数据集
                         datasetGroupManage.innerSave(dsGroup);
                     });
 
@@ -594,22 +600,23 @@ public class DataVisualizationServer implements DataVisualizationApi {
                 }
             }
 
-            // 更换主数据内容
+            // ========== 第三阶段：替换组件数据中的ID ==========
             AtomicReference<String> componentDataStr = new AtomicReference<>(request.getComponentData());
+            // 3.1 替换数据集组ID
             dsGroupIdMap.forEach((key, value) -> {
                 componentDataStr.set(componentDataStr.get().replaceAll(key.toString(), value.toString()));
             });
+            // 3.2 替换数据集表ID
             dsTableIdMap.forEach((key, value) -> {
                 componentDataStr.set(componentDataStr.get().replaceAll(key.toString(), value.toString()));
             });
-
+            // 3.3 替换字段ID
             dsTableFieldsIdMap.forEach((key, value) -> {
                 componentDataStr.set(componentDataStr.get().replaceAll(key.toString(), value.toString()));
             });
-
+            // 3.4 替换数据源ID和表名
             datasourceIdMap.forEach((key, value) -> {
                 componentDataStr.set(componentDataStr.get().replaceAll(key.toString(), value.toString()));
-                //表名映射更新
                 Map<String, String> appDsTableNamesMap = dsTableNamesMap.get(key);
                 Map<String, String> systemDsTableNamesMap = dsTableNamesMap.get(value);
                 if (MapUtils.isNotEmpty(appDsTableNamesMap) && MapUtils.isNotEmpty(systemDsTableNamesMap)) {
@@ -619,51 +626,62 @@ public class DataVisualizationServer implements DataVisualizationApi {
                         }
                     });
                 }
-
             });
             request.setComponentData(componentDataStr.get());
         }
+
+        // ========== 第四阶段：保存可视化资源信息 ==========
         DataVisualizationInfo visualizationInfo = new DataVisualizationInfo();
         BeanUtils.copyBean(visualizationInfo, request);
         visualizationInfo.setNodeType(request.getNodeType() == null ? DataVisualizationConstants.NODE_TYPE.LEAF : request.getNodeType());
+        // 4.1 设置水印状态
         if (request.getSelfWatermarkStatus() != null && request.getSelfWatermarkStatus()) {
             visualizationInfo.setSelfWatermarkStatus(1);
         } else {
             visualizationInfo.setSelfWatermarkStatus(0);
         }
+        // 4.2 如果是复制操作，删除原有数据
         if (DataVisualizationConstants.RESOURCE_OPT_TYPE.COPY.equals(request.getOptType())) {
-            // 复制更新 新建权限插入
             visualizationInfoMapper.deleteById(request.getId());
             snapshotMapper.deleteById(request.getId());
             visualizationInfo.setNodeType(DataVisualizationConstants.NODE_TYPE.LEAF);
         }
-        // 文件夹走默认发布 非文件夹默认未发布
+        // 4.3 设置状态：文件夹默认已发布，仪表板默认未发布
         visualizationInfo.setStatus(DataVisualizationConstants.NODE_TYPE.FOLDER.equals(visualizationInfo.getNodeType()) ? CommonConstants.DV_STATUS.PUBLISHED : CommonConstants.DV_STATUS.UNPUBLISHED);
+        // 4.4 保存可视化资源
         Long newDvId = coreVisualizationManage.innerSave(visualizationInfo);
         request.setId(newDvId);
-        // 还原ID信息
+
+        // ========== 第五阶段：处理图表视图信息 ==========
         Map<Long, ChartViewDTO> canvasViews = request.getCanvasViewInfo();
         if (isAppSave) {
+            // 5.1 如果是应用保存，替换图表视图中的ID
             Map<Long, String> canvasViewsStr = VisualizationUtils.viewTransToStr(canvasViews);
             canvasViewsStr.forEach((viewId, viewInfoStr) -> {
                 AtomicReference<String> mutableViewInfoStr = new AtomicReference<>(viewInfoStr);
+                // 5.1.1 替换数据源ID
                 datasourceIdMap.forEach((key, value) -> {
                     mutableViewInfoStr.set(mutableViewInfoStr.get().replaceAll(key.toString(), value.toString()));
                 });
+                // 5.1.2 替换数据集表ID
                 dsTableIdMap.forEach((key, value) -> {
                     mutableViewInfoStr.set(mutableViewInfoStr.get().replaceAll(key.toString(), value.toString()));
                 });
+                // 5.1.3 替换字段ID
                 dsTableFieldsIdMap.forEach((key, value) -> {
                     mutableViewInfoStr.set(mutableViewInfoStr.get().replaceAll(key.toString(), value.toString()));
                 });
+                // 5.1.4 替换数据集组ID
                 dsGroupIdMap.forEach((key, value) -> {
                     mutableViewInfoStr.set(mutableViewInfoStr.get().replaceAll(key.toString(), value.toString()));
                 });
+                // 5.1.5 替换字段名称
                 dsTableFieldsDatasetNameMap.forEach((key, value) -> {
                     mutableViewInfoStr.set(mutableViewInfoStr.get().replaceAll(key, value));
                 });
                 canvasViewsStr.put(viewId, mutableViewInfoStr.get());
             });
+            // 5.2 转换回对象
             canvasViews = VisualizationUtils.viewTransToObj(canvasViewsStr);
             canvasViews.forEach((key, viewInfo) -> {
                 viewInfo.setDataFrom("dataset");
@@ -672,7 +690,8 @@ public class DataVisualizationServer implements DataVisualizationApi {
                 }
             });
         }
-        //保存图表信息
+
+        // ========== 第六阶段：保存图表信息 ==========
         chartDataManage.saveChartViewFromVisualization(request.getComponentData(), newDvId, canvasViews);
         return newDvId.toString();
     }

@@ -9,17 +9,18 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 维度、指标、过滤器
+ * 图表字段DTO
+ * 维度、指标、过滤器的统一字段定义
  */
 @Data
 public class ChartViewFieldDTO extends ChartViewFieldBaseDTO implements Serializable {
     /**
-     * 过滤
+     * 过滤条件列表
      */
     private List<ChartViewFieldFilterDTO> filter;
 
     /**
-     * 排序
+     * 自定义排序列表
      */
     private List<String> customSort;
 
@@ -44,13 +45,13 @@ public class ChartViewFieldDTO extends ChartViewFieldBaseDTO implements Serializ
     private String groupType;
 
     /**
-     * 字段来源
+     * 字段来源（不序列化到JSON）
      */
     @JsonIgnore
     private FieldSource source;
 
     /**
-     * 显隐
+     * 是否显示（只写属性，不序列化到JSON）
      */
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Boolean show;
