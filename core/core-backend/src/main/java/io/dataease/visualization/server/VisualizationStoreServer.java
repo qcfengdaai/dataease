@@ -38,6 +38,7 @@ public class VisualizationStoreServer implements VisualizationStoreApi {
      */
     @Override
     public void execute(VisualizationStoreRequest request) {
+        // 调用Manage层执行存储操作（收藏或取消收藏）
         visualizationStoreManage.execute(request);
     }
 
@@ -49,14 +50,19 @@ public class VisualizationStoreServer implements VisualizationStoreApi {
      */
     @Override
     public List<VisualizationStoreVO> query(VisualizationWorkbranchQueryRequest request) {
+        // 1. 调用Manage层查询收藏的可视化资源（分页：第1页，每页20条）
         IPage<VisualizationStoreVO> iPage = visualizationStoreManage.query(1, 20, request);
         List<VisualizationStoreVO> resourceVOS = iPage.getRecords();
+        // 2. 如果查询结果不为空，处理创建者和编辑者显示名称
         if (!CollectionUtils.isEmpty(resourceVOS)) {
             resourceVOS.forEach(item -> {
+                // 2.1 如果创建者ID为"1"（系统管理员ID），显示为"系统管理员"
                 item.setCreator(StringUtils.equals(item.getCreator(), "1") ? Translator.get("i18n_sys_admin") : item.getCreator());
+                // 2.2 如果最后编辑者ID为"1"，显示为"系统管理员"，否则显示创建者名称
                 item.setLastEditor(StringUtils.equals(item.getLastEditor(), "1") ? Translator.get("i18n_sys_admin") : item.getCreator());
             });
         }
+        // 3. 返回查询结果列表
         return iPage.getRecords();
     }
 
@@ -68,6 +74,7 @@ public class VisualizationStoreServer implements VisualizationStoreApi {
      */
     @Override
     public boolean favorited(Long id) {
+        // 调用Manage层检查资源是否已被收藏
         return visualizationStoreManage.favorited(id);
     }
 }

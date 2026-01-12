@@ -44,12 +44,18 @@ public class VisualizationBackgroundService implements VisualizationBackgroundAp
      */
     @Override
     public Map<String, List<VisualizationBackgroundVO>> findAll() {
+        // 1. 查询所有背景样式
         List<VisualizationBackground> result = mapper.selectList(new QueryWrapper<>());
+        // 2. 将实体转换为VO并进行分组
         return result.stream().map(vb ->{
+            // 2.1 创建VO对象
             VisualizationBackgroundVO vbVO = new VisualizationBackgroundVO();
+            // 2.2 复制属性
             BeanUtils.copyBean(vbVO,vb);
+            // 2.3 在名称前添加"仪表板"前缀（国际化）
             vbVO.setName(Translator.get("i18n_board")+vbVO.getName());
             return vbVO;
+        // 2.4 按分类字段进行分组，返回Map
         }).collect(Collectors.groupingBy(VisualizationBackgroundVO::getClassification));
     }
 }

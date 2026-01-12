@@ -44,8 +44,11 @@ public class VisualizationWatermarkService implements VisualizationWatermarkApi 
      */
     @Override
     public VisualizationWatermarkVO getWatermarkInfo() {
+        // 1. 查询系统默认水印配置
         VisualizationWatermark watermark =  watermarkMapper.selectById(DEFAULT_ID);
+        // 2. 创建水印VO对象
         VisualizationWatermarkVO watermarkVO = new VisualizationWatermarkVO();
+        // 3. 将实体属性复制到VO并返回
         return BeanUtils.copyBean(watermarkVO,watermark);
     }
 
@@ -58,9 +61,13 @@ public class VisualizationWatermarkService implements VisualizationWatermarkApi 
      */
     @Override
     public void saveWatermarkInfo(VisualizationWatermarkRequest watermarkRequest) {
+        // 1. 创建水印实体
         VisualizationWatermark watermark =  new VisualizationWatermark();
+        // 2. 将请求参数复制到实体
         BeanUtils.copyBean(watermark,watermarkRequest);
+        // 3. 设置为系统默认水印
         watermark.setId(DEFAULT_ID);
+        // 4. 更新数据库中的水印配置
         watermarkMapper.updateById(watermark);
     }
 }
