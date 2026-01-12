@@ -233,6 +233,11 @@ public class ExtTableField implements Serializable {
         private Object value;
     }
 
+    /**
+     * 扩展表字段映射配置
+     * 定义表单字段与数据库表列之间的映射关系，包括列名、数据类型、长度精度等信息
+     * 支持单字段映射和范围字段（如日期范围）的双字段映射
+     */
     @Data
     @Builder
     @AllArgsConstructor
@@ -242,36 +247,109 @@ public class ExtTableField implements Serializable {
         @Serial
         private static final long serialVersionUID = 4233066732126872840L;
 
+        /**
+         * 列名
+         * 映射到数据库表的列名，单值字段使用此属性
+         */
         private String columnName;
 
-        //dateRange下对应两个字段
+        /**
+         * 列名1
+         * 日期范围等范围类型字段映射的起始列名
+         */
         private String columnName1;
+
+        /**
+         * 列名2
+         * 日期范围等范围类型字段映射的结束列名
+         */
         private String columnName2;
 
+        /**
+         * 原列名
+         * 字段更新前的原列名，用于表结构变更时的列名映射
+         */
         private String oldColumnName;
+
+        /**
+         * 原列名1
+         * 范围类型字段更新前的起始列原列名
+         */
         private String oldColumnName1;
+
+        /**
+         * 原列名2
+         * 范围类型字段更新前的结束列原列名
+         */
         private String oldColumnName2;
 
+        /**
+         * 数据库基础类型
+         * 指定该字段在数据库中的数据类型
+         */
         private BaseType type;
 
-        //长度
+        /**
+         * 字段长度
+         * 字符串类型字段的最大长度
+         */
         private Integer size;
-        //精度
+
+        /**
+         * 字段精度
+         * 小数类型字段的小数位数
+         */
         private Integer accuracy;
 
+        /**
+         * 是否使用已存在的表
+         * true表示映射到已存在的数据表，false表示需要创建新表
+         */
         private boolean useExistsTable;
 
     }
 
+    /**
+     * 数据库基础类型枚举
+     * 定义表单字段映射到数据库时支持的数据类型
+     */
     public enum BaseType {
-        nvarchar, //字符串
-        text, //长文本
-        number, //整型数字
-        decimal, //小数数字
-        datetime //日期
+        /**
+         * 字符串类型
+         * 对应数据库的VARCHAR类型，适用于短文本字段
+         */
+        nvarchar,
+
+        /**
+         * 长文本类型
+         * 对应数据库的TEXT类型，适用于大文本内容
+         */
+        text,
+
+        /**
+         * 整型数字
+         * 对应数据库的INTEGER类型，适用于整数数值
+         */
+        number,
+
+        /**
+         * 小数数字
+         * 对应数据库的DECIMAL类型，适用于精确小数计算
+         */
+        decimal,
+
+        /**
+         * 日期时间类型
+         * 对应数据库的DATETIME类型，适用于日期和时间存储
+         */
+        datetime
     }
 
 
+    /**
+     * 数据表字段定义
+     * 用于定义数据库表中实际的列结构，包括列名、类型、约束等DDL相关信息
+     */
     @Data
     @Builder
     @AllArgsConstructor
@@ -281,21 +359,52 @@ public class ExtTableField implements Serializable {
         @Serial
         private static final long serialVersionUID = 85092190247927362L;
 
+        /**
+         * 列名
+         * 数据库表中的列名称
+         */
         private String columnName;
 
+        /**
+         * 原列名
+         * 列更新前的原始名称，用于ALTER TABLE时的列名变更
+         */
         private String oldColumnName;
 
+        /**
+         * 数据类型
+         * 列的数据库基础类型
+         */
         private BaseType type;
 
+        /**
+         * 是否必填
+         * true表示该列为NOT NULL约束
+         */
         private boolean required;
 
+        /**
+         * 是否主键
+         * true表示该列为表的主键
+         */
         private boolean primaryKey;
 
-        //长度
+        /**
+         * 字段长度
+         * 字符串类型列的最大长度
+         */
         private Integer size;
-        //精度
+
+        /**
+         * 字段精度
+         * 小数类型列的小数位数
+         */
         private Integer accuracy;
 
+        /**
+         * 列注释
+         * 数据库列的注释说明
+         */
         private String comment;
 
     }
