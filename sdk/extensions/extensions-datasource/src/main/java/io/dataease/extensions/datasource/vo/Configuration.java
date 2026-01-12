@@ -9,16 +9,98 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * DataEase数据源配置视图对象
+ * <p>
+ * 用于封装数据源的完整配置信息，包括数据库连接参数、SSH隧道配置、
+ * 连接池设置等。支持多种数据库类型和连接方式的配置管理。
+ * </p>
+ *
+ * @author fit2cloud
+ * @since 1.0
+ */
 @Data
 public class Configuration {
+
+    /**
+     * 数据源类型
+     * <p>
+     * 数据源的类型标识，如mysql、postgresql、oracle等。
+     * 用于确定数据源的具体类型和相应的处理逻辑。
+     * </p>
+     */
     private String type;
+
+    /**
+     * 数据源名称
+     * <p>
+     * 数据源的显示名称，用于系统中的标识和管理。
+     * 应该为有意义的名称，便于用户识别和选择。
+     * </p>
+     */
     private String name;
+
+    /**
+     * 数据库目录名
+     * <p>
+     * 数据库中的目录（catalog）名称，用于多数据库实例的管理。
+     * 在某些数据库系统中用于区分不同的数据库实例。
+     * </p>
+     */
     private String catalog;
+
+    /**
+     * 目录描述
+     * <p>
+     * 数据库目录的详细描述信息。
+     * 用于提供额外的说明和文档化信息。
+     * </p>
+     */
     private String catalogDesc;
+
+    /**
+     * 额外参数
+     * <p>
+     * 数据库连接的额外参数配置，用于传递特殊的连接选项。
+     * 可以包含数据库特有的配置参数和优化设置。
+     * </p>
+     */
     private String extraParams;
+
+    /**
+     * 关键字前缀
+     * <p>
+     * 数据库关键字和标识符的转义前缀字符，默认为空。
+     * 用于处理数据库保留关键字和特殊字符的转义。
+     * </p>
+     */
     private String keywordPrefix = "";
+
+    /**
+     * 关键字后缀
+     * <p>
+     * 数据库关键字和标识符的转义后缀字符，默认为空。
+     * 与前缀配合使用，完成完整的关键字转义。
+     * </p>
+     */
     private String keywordSuffix = "";
+
+    /**
+     * 别名前缀
+     * <p>
+     * 表别名和字段别名的转义前缀字符，默认为空。
+     * 用于处理SQL语句中别名的正确转义和识别。
+     * </p>
+     */
     private String aliasPrefix = "";
+
+    /**
+     * 别名后缀
+     * <p>
+     * 表别名和字段别名的转义后缀字符，默认为空。
+     * 与前缀配合使用，完成完整的别名转义。
+     * </p>
+     */
     private String aliasSuffix = "";
     protected String jdbc;
     private String host;

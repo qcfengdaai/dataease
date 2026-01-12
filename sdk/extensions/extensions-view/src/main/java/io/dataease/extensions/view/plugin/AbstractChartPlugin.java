@@ -8,6 +8,19 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+ * 抽象图表插件基类
+ * 定义了图表插件开发的标准流程和接口规范，包括轴字段处理、过滤条件处理、
+ * 数据计算和视图构建等核心功能
+ *
+ * <p>图表插件开发流程：</p>
+ * <ol>
+ *   <li>formatAxis - 处理和格式化图表的轴字段</li>
+ *   <li>customFilter - 处理自定义过滤条件</li>
+ *   <li>calcChartResult - 计算图表数据结果</li>
+ *   <li>buildChart - 构建最终的图表视图</li>
+ * </ol>
+ */
 public abstract class AbstractChartPlugin {
 
     /**
