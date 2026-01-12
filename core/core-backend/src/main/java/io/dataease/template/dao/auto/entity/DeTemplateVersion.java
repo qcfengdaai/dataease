@@ -6,9 +6,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * <p>
- * 
- * </p>
+ * 模板版本实体类
+ * 用于记录模板的版本信息和安装状态
  *
  * @author fit2cloud
  * @since 2024-05-07
@@ -18,25 +17,55 @@ public class DeTemplateVersion implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 安装排序(主键)
+     */
     @TableId("installed_rank")
     private Integer installedRank;
 
+    /**
+     * 版本号
+     */
     private String version;
 
+    /**
+     * 版本描述
+     */
     private String description;
 
+    /**
+     * 版本类型
+     */
     private String type;
 
+    /**
+     * 脚本名称
+     */
     private String script;
 
+    /**
+     * 校验和
+     */
     private Integer checksum;
 
+    /**
+     * 安装人
+     */
     private String installedBy;
 
+    /**
+     * 安装时间
+     */
     private LocalDateTime installedOn;
 
+    /**
+     * 执行时长(毫秒)
+     */
     private Integer executionTime;
 
+    /**
+     * 是否成功
+     */
     private Boolean success;
 
     public Integer getInstalledRank() {

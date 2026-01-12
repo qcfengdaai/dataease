@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 模板表
- * </p>
+ * 可视化模板实体类
+ * 用于存储可视化模板的基本信息、样式、数据等内容
  *
  * @author fit2cloud
  * @since 2024-07-17
