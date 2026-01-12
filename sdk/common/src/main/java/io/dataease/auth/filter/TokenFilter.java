@@ -21,7 +21,26 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+/**
+ * Token认证过滤器
+ * 负责处理所有HTTP请求的身份认证和授权验证
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>HTTP方法验证 - 只允许GET、POST、OPTIONS、DELETE方法</li>
+ *   <li>白名单检查 - 无需认证的接口直接放行</li>
+ *   <li>Token验证 - 验证用户Token和分享链接Token的有效性</li>
+ *   <li>用户上下文 - 设置当前请求的用户信息到线程本地变量</li>
+ *   <li>桌面版支持 - 桌面版环境下自动设置默认用户</li>
+ *   <li>异常处理 - 统一处理认证失败的响应</li>
+ * </ul>
+ */
 public class TokenFilter implements Filter {
+
+    /**
+     * 网关标识请求头名称
+     * 用于标识请求来源和错误信息传递
+     */
     private static final String headName = "DE-GATEWAY-FLAG";
 
     @Override

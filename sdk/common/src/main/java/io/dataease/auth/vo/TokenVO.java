@@ -22,8 +22,16 @@ public class TokenVO implements Serializable {
     @Schema(description = "有效期")
     private Long exp;
 
+    /**
+     * 多因子认证信息
+     * 包含MFA的启用状态和配置信息
+     */
     private MfaItem mfa;
 
+    /**
+     * 密码失效信息
+     * 当用户密码过期或需要强制修改时返回相关提示信息
+     */
     private InvalidPwdVO invalidPwd;
 
     public TokenVO(String token, Long exp) {
