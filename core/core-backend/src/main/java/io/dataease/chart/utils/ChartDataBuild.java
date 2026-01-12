@@ -1475,39 +1475,55 @@ public class ChartDataBuild {
      * @return 包含表格数据和明细数据的 Map,包含 "fields"、"detailFields" 和 "tableRow"(包含 details) 三个键
      */
     public static Map<String, Object> transTableNormalWithDetail(List<ChartViewFieldDTO> xAxis, List<ChartViewFieldDTO> yAxis, List<String[]> data, List<ChartViewFieldDTO> detailFields, List<String[]> detailData, Map<String, ColumnPermissionItem> desensitizationList) {
+        // 计算明细字段在detailFields中的起始索引
         int detailIndex = xAxis.size();
 
+        // 提取真正的明细字段(排除主表字段)
         List<ChartViewFieldDTO> realDetailFields = detailFields.subList(detailIndex, detailFields.size());
 
+        // 构建主表字段列表:维度字段 + 指标字段
         List<ChartViewFieldDTO> fields = new ArrayList<>();
         if (ObjectUtils.isNotEmpty(xAxis))
             fields.addAll(xAxis);
         if (ObjectUtils.isNotEmpty(yAxis))
             fields.addAll(yAxis);
+
+        // 转换主表数据为表格格式
         Map<String, Object> map = transTableNormal(fields, null, data, desensitizationList);
         List<Map<String, Object>> tableRow = (List<Map<String, Object>>) map.get("tableRow");
+
+        // 将明细数据按主表维度字段分组
         final int xEndIndex = detailIndex;
         Map<String, List<String[]>> groupDataList = detailData.stream().collect(Collectors.groupingBy(item -> "(" + StringUtils.join(ArrayUtils.subarray(item, 0, xEndIndex), ")-de-(") + ")"));
 
+        // 将明细数据关联到主表数据中
         tableRow.forEach(row -> {
+            // 构建主表数据的分组键
             String key = xAxis.stream().map(x -> String.format(format, row.get(x.getDataeaseName()).toString())).collect(Collectors.joining("-de-"));
+            // 获取对应的明细数据列表
             List<String[]> detailFieldValueList = groupDataList.get(key);
+            // 将明细数据转换为Map格式
             List<Map<String, Object>> detailValueMapList = detailFieldValueList.stream().map((detailArr -> {
                 Map<String, Object> temp = new HashMap<>();
+                // 遍历所有明细字段,提取对应的值
                 for (int i = 0; i < realDetailFields.size(); i++) {
                     ChartViewFieldDTO realDetailField = realDetailFields.get(i);
                     temp.put(realDetailField.getDataeaseName(), detailArr[detailIndex + i]);
                 }
                 return temp;
             })).collect(Collectors.toList());
+            // 将明细数据添加到主表行中
             row.put("details", detailValueMapList);
         });
 
+        // 创建一个虚拟的明细字段,用于标识明细数据列
         ChartViewFieldDTO detailFieldDTO = new ChartViewFieldDTO();
         detailFieldDTO.setId(IDUtils.snowID());
         detailFieldDTO.setName("detail");
         detailFieldDTO.setDataeaseName("detail");
         fields.add(detailFieldDTO);
+
+        // 组装返回结果
         map.put("fields", fields);
         map.put("detailFields", realDetailFields);
         map.put("tableRow", tableRow);
@@ -1678,20 +1694,22 @@ public class ChartDataBuild {
      * @return 包含分组堆叠图数据格式(包含 group 和 category 信息)的 Map,键为 "data"
      */
     public static Map<String, Object> transGroupStackDataAntV(List<ChartViewFieldDTO> xAxisBase, List<ChartViewFieldDTO> xAxis, List<ChartViewFieldDTO> xAxisExt, List<ChartViewFieldDTO> yAxis, List<ChartViewFieldDTO> extStack, List<String[]> data, ChartViewDTO view, boolean isDrill) {
-        // 堆叠柱状图
+        // 模式1: 堆叠柱状图(没有分组维度)
         if (ObjectUtils.isEmpty(xAxisExt)) {
             return transStackChartDataAntV(xAxisBase, xAxis, yAxis, view, data, extStack, isDrill);
-            //  分组柱状图
+        // 模式2: 分组柱状图(没有堆叠维度)
         } else if (ObjectUtils.isNotEmpty(xAxisExt) && ObjectUtils.isEmpty(extStack)) {
             return transBaseGroupDataAntV(xAxisBase, xAxis, xAxisExt, yAxis, view, data, isDrill);
-            // 分组堆叠柱状图
+        // 模式3: 分组堆叠柱状图(既有分组又有堆叠)
         } else {
             Map<String, Object> map = new HashMap<>();
 
             List<AxisChartDataAntVDTO> dataList = new ArrayList<>();
+            // 遍历每一行原始数据
             for (int i1 = 0; i1 < data.size(); i1++) {
                 String[] row = data.get(i1);
 
+                // 构建X轴字段值(基础维度)
                 StringBuilder xField = new StringBuilder();
                 if (isDrill) {
                     xField.append(row[xAxis.size() - 1]);
@@ -1705,6 +1723,7 @@ public class ChartDataBuild {
                     }
                 }
 
+                // 构建分组字段值(分组维度)
                 StringBuilder groupField = new StringBuilder();
                 for (int i = xAxisBase.size(); i < xAxisBase.size() + xAxisExt.size(); i++) {
                     if (i == xAxisBase.size() + xAxisExt.size() - 1) {
@@ -1714,6 +1733,7 @@ public class ChartDataBuild {
                     }
                 }
 
+                // 构建堆叠字段值(堆叠维度)
                 StringBuilder stackField = new StringBuilder();
                 for (int i = xAxisBase.size() + xAxisExt.size(); i < xAxisBase.size() + xAxisExt.size() + extStack.size(); i++) {
                     if (i == xAxisBase.size() + xAxisExt.size() + extStack.size() - 1) {
@@ -1723,28 +1743,34 @@ public class ChartDataBuild {
                     }
                 }
 
+                // 创建数据对象
                 AxisChartDataAntVDTO axisChartDataDTO = new AxisChartDataAntVDTO();
                 axisChartDataDTO.setField(xField.toString());
                 axisChartDataDTO.setName(xField.toString());
 
+                // 构建维度列表和指标列表
                 List<ChartDimensionDTO> dimensionList = new ArrayList<>();
                 List<io.dataease.extensions.view.dto.ChartQuotaDTO> quotaList = new ArrayList<>();
 
+                // 添加所有维度字段
                 for (int j = 0; j < xAxis.size(); j++) {
                     ChartDimensionDTO chartDimensionDTO = new ChartDimensionDTO();
                     chartDimensionDTO.setId(xAxis.get(j).getId());
                     chartDimensionDTO.setValue(row[j]);
                     dimensionList.add(chartDimensionDTO);
                 }
-
                 axisChartDataDTO.setDimensionList(dimensionList);
 
+                // 处理指标字段
                 if (ObjectUtils.isNotEmpty(yAxis)) {
+                    // 计算指标值在数据行中的索引
                     int valueIndex = xAxis.size();
+                    // 添加指标字段信息
                     ChartQuotaDTO chartQuotaDTO = new ChartQuotaDTO();
                     chartQuotaDTO.setId(yAxis.get(0).getId());
                     quotaList.add(chartQuotaDTO);
                     axisChartDataDTO.setQuotaList(quotaList);
+                    // 解析数值,异常时设置为0
                     try {
                         axisChartDataDTO.setValue(StringUtils.isEmpty(row[valueIndex]) ? null : new BigDecimal(row[valueIndex]));
                     } catch (Exception e) {
@@ -1754,10 +1780,13 @@ public class ChartDataBuild {
                     axisChartDataDTO.setQuotaList(quotaList);
                     axisChartDataDTO.setValue(new BigDecimal(0));
                 }
+
+                // 设置分组和堆叠信息
                 axisChartDataDTO.setGroup(groupField.toString());
                 axisChartDataDTO.setCategory(stackField.toString());
                 dataList.add(axisChartDataDTO);
             }
+            // 将数据列表放入Map中返回
             map.put("data", dataList);
             return map;
         }
@@ -1881,30 +1910,39 @@ public class ChartDataBuild {
     public static Map<String, Object> transBarRangeDataAntV(boolean skipBarRange, boolean isDate, List<ChartViewFieldDTO> xAxisBase, List<ChartViewFieldDTO> xAxis, List<ChartViewFieldDTO> yAxis, ChartViewDTO view, List<String[]> data, boolean isDrill) {
 
         Map<String, Object> map = new HashMap<>();
+        // 如果跳过区间处理,直接返回空数据
         if (skipBarRange) {
             map.put("data", new ArrayList<>());
             return map;
         }
 
+        // 用于收集所有日期值或数值,以便计算最大最小值
         List<Date> dates = new ArrayList<>();
         List<BigDecimal> numbers = new ArrayList<>();
 
+        // 日期字段和日期格式化器
         ChartViewFieldDTO dateAxis1 = null;
-
         SimpleDateFormat sdf = null;
+
+        // 如果是日期类型,初始化日期格式化器
         if (isDate) {
+            // 根据是否聚合确定日期字段位置
             if (BooleanUtils.isTrue(view.getAggregate())) {
                 dateAxis1 = yAxis.get(0);
             } else {
                 dateAxis1 = xAxis.get(xAxisBase.size());
             }
+            // 根据日期样式和分隔符获取日期格式
             sdf = new SimpleDateFormat(getDateFormat(dateAxis1.getDateStyle(), dateAxis1.getDatePattern()));
         }
 
+        // 构建数据列表
         List<Object> dataList = new ArrayList<>();
+        // 遍历每一行原始数据
         for (int i1 = 0; i1 < data.size(); i1++) {
             String[] row = data.get(i1);
 
+            // 构建X轴字段值(基础维度)
             StringBuilder xField = new StringBuilder();
             if (isDrill) {
                 xField.append(row[xAxis.size() - 1]);
@@ -1918,19 +1956,21 @@ public class ChartDataBuild {
                 }
             }
 
-
+            // 创建数据对象
             Map<String, Object> obj = new HashMap<>();
             obj.put("field", xField.toString());
             obj.put("category", xField.toString());
 
+            // 构建维度列表
             List<ChartDimensionDTO> dimensionList = new ArrayList<>();
-
+            // 添加基础维度字段
             for (int i = 0; i < xAxisBase.size(); i++) {
                 ChartDimensionDTO chartDimensionDTO = new ChartDimensionDTO();
                 chartDimensionDTO.setId(xAxis.get(i).getId());
                 chartDimensionDTO.setValue(row[i]);
                 dimensionList.add(chartDimensionDTO);
             }
+            // 如果是钻取状态,添加钻取维度
             if (isDrill) {
                 int index = xAxis.size() - 1;
                 ChartDimensionDTO chartDimensionDTO = new ChartDimensionDTO();
@@ -1940,14 +1980,17 @@ public class ChartDataBuild {
             }
             obj.put("dimensionList", dimensionList);
 
-
+            // 构建区间值列表
             List<Object> values = new ArrayList<>();
 
+            // 检查区间起始和结束值是否为空
             if (row[xAxisBase.size()] == null || row[xAxisBase.size() + 1] == null) {
                 continue;
             }
 
             if (isDate) {
+                // 日期区间处理
+                // 根据是否聚合确定区间值在数据行中的索引
                 int index;
                 if (BooleanUtils.isTrue(view.getAggregate())) {
                     index = xAxis.size();
@@ -1955,9 +1998,12 @@ public class ChartDataBuild {
                     index = xAxisBase.size();
                 }
 
+                // 添加区间起始和结束日期
                 values.add(row[index]);
                 values.add(row[index + 1]);
                 obj.put("values", values);
+
+                // 解析日期并收集到列表中
                 Date date1 = null, date2 = null;
                 try {
                     date1 = sdf.parse(row[index]);
@@ -1973,25 +2019,30 @@ public class ChartDataBuild {
                     }
                 } catch (Exception ignore) {
                 }
-                //间隔时间
+                // 计算并设置时间间隔
                 obj.put("gap", getTimeGap(date1, date2, dateAxis1.getDateStyle()));
 
             } else {
+                // 数值区间处理
+                // 添加区间起始和结束数值
                 values.add(new BigDecimal(row[xAxis.size()]));
                 values.add(new BigDecimal(row[xAxis.size() + 1]));
                 obj.put("values", values);
 
+                // 收集数值到列表中
                 numbers.add(new BigDecimal(row[xAxis.size()]));
                 numbers.add(new BigDecimal(row[xAxis.size() + 1]));
 
-                //间隔差
+                // 计算并设置数值间隔差
                 obj.put("gap", new BigDecimal(row[xAxis.size() + 1]).subtract(new BigDecimal(row[xAxis.size()])));
             }
 
             dataList.add(obj);
         }
 
+        // 计算并设置最大最小值
         if (isDate) {
+            // 日期类型:计算最小和最大日期
             Date minDate = dates.stream().min(Date::compareTo).orElse(null);
             if (minDate != null) {
                 map.put("minTime", sdf.format(minDate));
@@ -2001,10 +2052,12 @@ public class ChartDataBuild {
                 map.put("maxTime", sdf.format(maxDate));
             }
         } else {
+            // 数值类型:计算最小和最大值
             map.put("min", numbers.stream().min(BigDecimal::compareTo).orElse(null));
             map.put("max", numbers.stream().max(BigDecimal::compareTo).orElse(null));
         }
 
+        // 设置返回结果
         map.put("isDate", isDate);
         map.put("data", dataList);
         return map;
@@ -2159,10 +2212,13 @@ public class ChartDataBuild {
      * @return 包含符号地图数据的 Map,包含 "fields"、"detailFields" 和 "tableRow"(包含 details) 三个键
      */
     public static Map<String, Object> transSymbolicMapNormalWithDetail(ChartViewDTO view, List<ChartViewFieldDTO> xAxis, List<ChartViewFieldDTO> yAxis, List<ChartViewFieldDTO> extBubble, List<String[]> data, List<ChartViewFieldDTO> detailFields, List<String[]> detailData) {
+        // 计算明细字段在detailFields中的起始索引
         int detailIndex = xAxis.size();
 
+        // 提取真正的明细字段(排除主表字段)
         List<ChartViewFieldDTO> realDetailFields = detailFields.subList(detailIndex, detailFields.size());
 
+        // 构建主表字段列表:维度字段 + 气泡字段 + 指标字段
         List<ChartViewFieldDTO> fields = new ArrayList<>();
         if (ObjectUtils.isNotEmpty(xAxis))
             fields.addAll(xAxis);
@@ -2170,19 +2226,33 @@ public class ChartDataBuild {
             fields.addAll(extBubble);
         if (ObjectUtils.isNotEmpty(yAxis))
             fields.addAll(yAxis);
+
+        // 转换主表数据为表格格式(不进行脱敏)
         Map<String, Object> map = transTableNormal(fields, view, data, new HashMap<>());
         List<Map<String, Object>> tableRow = (List<Map<String, Object>>) map.get("tableRow");
+
+        // 将明细数据按主表维度字段分组
         final int xEndIndex = detailIndex;
         Map<String, List<String[]>> groupDataList = detailData.stream().collect(Collectors.groupingBy(item -> "(" + StringUtils.join(ArrayUtils.subarray(item, 0, xEndIndex), ")-de-(") + ")"));
+
+        // 获取气泡字段名称(如果有)
         String extBubbleDataeaseName = ObjectUtils.isNotEmpty(extBubble) ? extBubble.get(0).getDataeaseName() : "";
+
+        // 将明细数据关联到主表数据中
         tableRow.forEach(row -> {
+            // 获取当前行的气泡大小值(如果没有则为0)
             BigDecimal rowValue = row.get(extBubbleDataeaseName) == null ? BigDecimal.ZERO : new BigDecimal(row.get(extBubbleDataeaseName).toString());
+            // 构建主表数据的分组键
             String key = xAxis.stream().map(x -> String.format(format, row.get(x.getDataeaseName()).toString())).collect(Collectors.joining("-de-"));
+            // 获取对应的明细数据列表
             List<String[]> detailFieldValueList = groupDataList.get(key);
+            // 将明细数据转换为Map格式
             List<Map<String, Object>> detailValueMapList = Optional.ofNullable(detailFieldValueList).orElse(new ArrayList<>()).stream().map((detailArr -> {
                 Map<String, Object> temp = new HashMap<>();
+                // 遍历所有明细字段,提取对应的值
                 for (int i = 0; i < realDetailFields.size(); i++) {
                     ChartViewFieldDTO realDetailField = realDetailFields.get(i);
+                    // 如果当前字段是气泡字段,使用主表的气泡值
                     if (StringUtils.equalsIgnoreCase(extBubbleDataeaseName, realDetailField.getDataeaseName())) {
                         temp.put(realDetailField.getDataeaseName(), rowValue);
                     } else {
@@ -2191,17 +2261,21 @@ public class ChartDataBuild {
                 }
                 return temp;
             })).collect(Collectors.toList());
-            //详情只要一个
+            // 明细数据只要一个(取第一条)
             row.put("details", !detailValueMapList.isEmpty() ? Collections.singletonList(detailValueMapList.getFirst()) : detailValueMapList);
         });
-        // 先过滤掉所有记录数字段
+
+        // 过滤掉记录数字段(*)
         List<ChartViewFieldDTO> filterCountAxis = fields.stream()
                 .filter(item -> !StringUtils.equalsIgnoreCase(item.getDataeaseName(), "*"))
                 .collect(Collectors.toList());
-        // 如果气泡大小是记录数，添加到字段列表中
+
+        // 如果气泡大小是记录数,添加所有指标字段到字段列表中
         if (ObjectUtils.isNotEmpty(extBubble) && "*".equals(extBubble.get(0).getDataeaseName())) {
             filterCountAxis.addAll(yAxis);
         }
+
+        // 组装返回结果
         map.put("fields", filterCountAxis);
         map.put("detailFields", realDetailFields);
         map.put("tableRow", tableRow);

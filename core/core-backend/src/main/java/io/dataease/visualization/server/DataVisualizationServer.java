@@ -199,7 +199,9 @@ public class DataVisualizationServer implements DataVisualizationApi {
      */
     @Override
     public DataVisualizationVO findCopyResource(Long dvId, String busiFlag) {
+        // 1. 调用代理对象查询资源快照信息
         DataVisualizationVO result = Objects.requireNonNull(CommonBeanFactory.proxy(this.getClass())).findById(new DataVisualizationBaseRequest(dvId, busiFlag, CommonConstants.RESOURCE_TABLE.SNAPSHOT, DataVisualizationConstants.QUERY_SOURCE.MAIN_EDIT));
+        // 2. 判断资源是否可以被复制（pid为-1表示根节点，可以被复制）
         if (result != null && result.getPid() == -1) {
             return result;
         } else {
@@ -219,59 +221,72 @@ public class DataVisualizationServer implements DataVisualizationApi {
     @Override
     @XpackInteract(value = "dataVisualizationServer", original = true)
     public DataVisualizationVO findById(DataVisualizationBaseRequest request) {
+        // 1. 提取请求参数
         Long dvId = request.getId();
         String busiFlag = request.getBusiFlag();
         String resourceTable = request.getResourceTable();
-        // 如果是编辑查询 则进行镜像检查
+        // 2. 如果是编辑查询，进行镜像检查
         if (DataVisualizationConstants.QUERY_SOURCE.MAIN_EDIT.equals(request.getSource())) {
+            // 2.1 构建查询条件：查询未发布或已保存未发布的快照
             QueryWrapper<SnapshotDataVisualizationInfo> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("id", dvId);
             queryWrapper.in("status", Arrays.asList(CommonConstants.DV_STATUS.UNPUBLISHED, CommonConstants.DV_STATUS.SAVED_UNPUBLISHED)); // 状态为0 未发布 和 2 已保存未发布的 不需要重置镜像
+            // 2.2 如果快照不存在，则恢复快照
             if (!snapshotMapper.exists(queryWrapper)) {
                 coreVisualizationManage.dvSnapshotRecover(dvId);
             }
         }
+        // 3. 查询仪表板基本信息
         DataVisualizationVO result = extDataVisualizationMapper.findDvInfo(dvId, busiFlag, resourceTable);
+        // 4. 如果查询到结果，进行数据组装
         if (result != null) {
-            // get creator
+            // 4.1 获取创建者姓名
             String userName = coreUserManage.getUserName(Long.valueOf(result.getCreateBy()));
             if (StringUtils.isNotBlank(userName)) {
                 result.setCreatorName(userName);
             }
-            //获取图表信息
+            // 4.2 获取图表信息
             List<ChartViewDTO> chartViewDTOS = chartViewManege.listBySceneId(dvId, resourceTable);
             if (!CollectionUtils.isEmpty(chartViewDTOS)) {
-                // 增加过滤当前使用的图表信息
+                // 4.2.1 过滤当前使用的图表信息（通过组件数据中的ID匹配）
                 Map<Long, ChartViewDTO> viewInfo = chartViewDTOS.stream().filter(item -> result.getComponentData().indexOf("\"id\":\"" + item.getId()) > 0).collect(Collectors.toMap(ChartViewDTO::getId, chartView -> chartView));
                 result.setCanvasViewInfo(viewInfo);
             }
+            // 4.3 设置水印信息
             VisualizationWatermark watermark = watermarkMapper.selectById("system_default");
             VisualizationWatermarkVO watermarkVO = new VisualizationWatermarkVO();
             BeanUtils.copyBean(watermarkVO, watermark);
             result.setWatermarkInfo(watermarkVO);
 
+            // 4.4 如果是定时报告查询，获取自定义过滤组件信息
             if (DataVisualizationConstants.QUERY_SOURCE.REPORT.equals(request.getSource()) && request.getTaskId() != null) {
-                //获取定时报告过自定义过滤组件信息
+                // 4.4.1 查询定时报告的自定义过滤组件
                 List<VisualizationReportFilterVO> filterVOS = extDataVisualizationMapper.queryReportFilter(dvId, request.getTaskId());
                 if (!CollectionUtils.isEmpty(filterVOS)) {
+                    // 4.4.2 将过滤组件信息转为Map，key为过滤组件ID
                     Map<Long, VisualizationReportFilterVO> reportFilterInfo = filterVOS.stream().collect(Collectors.toMap(VisualizationReportFilterVO::getFilterId, filterVo -> filterVo));
                     result.setReportFilterInfo(reportFilterInfo);
                 }
             }
+            // 4.5 如果不需要显示水印，禁用水印
             if (ObjectUtils.isNotEmpty(request.getShowWatermark()) && !request.getShowWatermark()) {
                 VisualizationWatermarkVO watermarkInfo = result.getWatermarkInfo();
                 String settingContent = null;
                 if (ObjectUtils.isNotEmpty(watermarkInfo) && StringUtils.isNotBlank(settingContent = watermarkInfo.getSettingContent())) {
+                    // 4.5.1 解析水印配置
                     Map map = JsonUtil.parse(settingContent, Map.class);
+                    // 4.5.2 禁用水印
                     map.put("enable", false);
                     settingContent = JsonUtil.toJSONString(map).toString();
                     watermarkInfo.setSettingContent(settingContent);
                     result.setWatermarkInfo(watermarkInfo);
                 }
             }
+            // 4.6 设置权重（用于排序）
             result.setWeight(9);
             return result;
         } else {
+            // 5. 如果资源不存在，抛出异常
             DEException.throwException(Translator.get("i18n_resource_not_exists"));
         }
         return null;
@@ -289,51 +304,63 @@ public class DataVisualizationServer implements DataVisualizationApi {
      * @param dsTableFieldsDatasetNameMap 数据集字段名称映射
      */
     private void appDatasetMatch(VisualizationExport2AppVO appData, Map<Long, Long> datasourceIdMap, Map<Long, Long> dsGroupIdMap, Map<Long, Long> dsTableIdMap, Map<Long, Long> dsTableFieldsIdMap,Map<String, String> dsTableFieldsDatasetNameMap) {
-
+        // 1. 提取应用数据中的数据集信息
         List<AppCoreDatasetGroupVO> sourceDatasetGroupList = appData.getDatasetGroupsInfo();
         List<AppCoreDatasetTableVO> sourceDatasetTableList = appData.getDatasetTablesInfo();
         List<AppCoreDatasetTableFieldVO> sourceDatasetTableFieldList = appData.getDatasetTableFieldsInfo();
 
+        // 2. 构建数据集表的映射关系（按数据集组ID分组）
         Map<Long, List<AppCoreDatasetTableVO>> sourceDatasetTableMap =
                 DeCollectionUtils.groupBy(sourceDatasetTableList, AppCoreDatasetTableVO::getDatasetGroupId);
 
+        // 3. 构建数据集字段的映射关系（按数据集表ID分组）
         Map<Long, List<AppCoreDatasetTableFieldVO>> sourceDatasetTableFieldMap =
                 DeCollectionUtils.groupBy(sourceDatasetTableFieldList, AppCoreDatasetTableFieldVO::getDatasetTableId);
 
+        // 4. 构建数据集字段的映射关系（按数据集组ID分组，用于计算字段匹配）
         Map<Long, List<AppCoreDatasetTableFieldVO>> sourceDatasetTableFieldMapGroup =
                 DeCollectionUtils.groupBy(sourceDatasetTableFieldList, AppCoreDatasetTableFieldVO::getDatasetGroupId);
 
 
+        // 5. 遍历每个数据集组，进行匹配
         sourceDatasetGroupList.forEach(sourceDatasetGroup -> {
+            // 5.1 获取源ID和系统ID
             Long systemDatasetGroupId = sourceDatasetGroup.getSystemDatasetId();
             Long sourceDatasetGroupId = sourceDatasetGroup.getId();
-            // 获取 dsGroupIdMap
+            // 5.2 保存数据集组ID映射
             dsGroupIdMap.put(sourceDatasetGroup.getId(), systemDatasetGroupId);
+            // 5.3 查询系统中的数据集组信息
             CoreDatasetGroup systemDatasetGroup = coreDatasetGroupMapper.selectById(systemDatasetGroupId);
             if (systemDatasetGroup != null) {
+                // 5.4 查询系统中的数据集表列表
                 QueryWrapper<CoreDatasetTable> wrapper = new QueryWrapper<>();
                 wrapper.eq("dataset_group_id", systemDatasetGroupId);
                 List<CoreDatasetTable> systemDatasetTableList = coreDatasetTableMapper.selectList(wrapper);
+                // 5.5 获取源数据集表列表
                 List<AppCoreDatasetTableVO> sourceDatasetTableListSub = sourceDatasetTableMap.get(sourceDatasetGroupId);
                 if (systemDatasetTableList != null && sourceDatasetTableListSub != null) {
+                    // 5.6 遍历源数据集表，进行表名匹配
                     for (AppCoreDatasetTableVO sourceTable : sourceDatasetTableListSub) {
                         for (CoreDatasetTable systemTable : systemDatasetTableList) {
+                            // 5.6.1 根据表名匹配
                             if (sourceTable.getTableName().equals(systemTable.getTableName())) {
-                                // 获取dsTableIdMap datasourceIdMap
+                                // 5.6.2 保存数据集表ID映射和数据源ID映射
                                 dsTableIdMap.put(sourceTable.getId(), systemTable.getId());
                                 datasourceIdMap.put(sourceTable.getDatasourceId(), systemTable.getDatasourceId());
 
-                                // 获取 dsTableFieldsIdMap
+                                // 5.6.3 获取源数据集字段列表
                                 List<AppCoreDatasetTableFieldVO> sourceDatasetTableFieldListSub = sourceDatasetTableFieldMap.get(sourceTable.getId());
 
+                                // 5.6.4 查询系统中的数据集字段列表
                                 QueryWrapper<CoreDatasetTableField> wrapperField = new QueryWrapper<>();
                                 wrapperField.eq("dataset_table_id", systemTable.getId());
                                 List<CoreDatasetTableField> systemDatasetTableFieldSub = coreDatasetTableFieldMapper.selectList(wrapperField);
 
+                                // 5.6.5 遍历源数据集字段，根据原始字段名匹配
                                 for (AppCoreDatasetTableFieldVO sourceTableField : sourceDatasetTableFieldListSub) {
                                     for (CoreDatasetTableField systemTableField : systemDatasetTableFieldSub) {
                                         if (sourceTableField.getOriginName().equals(systemTableField.getOriginName())) {
-                                            // 获取dsTableIdMap datasourceIdMap
+                                            // 5.6.5.1 保存字段ID映射和字段名称映射
                                             dsTableFieldsIdMap.put(sourceTableField.getId(), systemTableField.getId());
                                             dsTableFieldsDatasetNameMap.put(sourceTableField.getDataeaseName(),systemTableField.getDataeaseName());
                                             break;
@@ -341,23 +368,27 @@ public class DataVisualizationServer implements DataVisualizationApi {
                                     }
                                 }
 
-                                // 获取 dsTableFieldsIdMapGroup 进行二次匹配 解决计算字段没有tableId 问题
+                                // 5.6.6 进行二次匹配，解决计算字段没有tableId的问题
                                 List<AppCoreDatasetTableFieldVO> sourceDatasetTableFieldListSubGroup = sourceDatasetTableFieldMapGroup.get(sourceTable.getDatasetGroupId());
 
+                                // 5.6.7 查询系统中的数据集字段列表（按数据集组ID）
                                 QueryWrapper<CoreDatasetTableField> wrapperFieldGroup = new QueryWrapper<>();
                                 wrapperFieldGroup.eq("dataset_group_id", systemTable.getDatasetGroupId());
                                 List<CoreDatasetTableField> systemDatasetTableFieldSubGroup = coreDatasetTableFieldMapper.selectList(wrapperFieldGroup);
 
+                                // 5.6.8 遍历源数据集字段，根据字段名匹配（用于计算字段）
                                 for (AppCoreDatasetTableFieldVO sourceTableField : sourceDatasetTableFieldListSubGroup) {
                                     for (CoreDatasetTableField systemTableField : systemDatasetTableFieldSubGroup) {
+                                        // 5.6.8.1 只处理未匹配的字段
                                         if (dsTableFieldsIdMap.get(sourceTableField.getId())==null && sourceTableField.getName().equals(systemTableField.getName())) {
-                                            // 获取dsTableIdMap datasourceIdMap
+                                            // 5.6.8.2 保存字段ID映射和字段名称映射
                                             dsTableFieldsIdMap.put(sourceTableField.getId(), systemTableField.getId());
                                             dsTableFieldsDatasetNameMap.put(sourceTableField.getDataeaseName(),systemTableField.getDataeaseName());
                                             break;
                                         }
                                     }
                                 }
+                                // 5.6.9 表名匹配成功，跳出内层循环
                                 break;
                             }
                         }
