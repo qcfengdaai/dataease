@@ -1,20 +1,32 @@
 package io.dataease.dds.constant;
 
+/**
+ * 数据源常量定义类
+ * 定义动态数据源系统中使用的各种常量
+ * 包括数据源名称、命名模式等配置常量
+ */
 public class DataSourceConstant {
 
     /**
-     * 这里的命名统一在配置文件命名的基础上加dataSource前缀且改小驼峰
-     * 默认数据源名称
+     * 默认管理数据源名称
+     * 用于DataEase系统管理功能的主数据源
+     * 命名规范：配置文件名称基础上添加dataSource前缀并改为小驼峰格式
      */
     public static final String DATA_SOURCE_MANAGE = "manege-ds";
 
     /**
-     * 递增可配数据源名称
-     * 这里的命名统一在配置文件命名的基础上加dataSource前缀且改小驼峰
-     * 后面可接着 db2... dbn 也可以根据
+     * 官方业务数据源名称
+     * 用于DataEase官方业务功能的数据源
+     * 命名规范：配置文件名称基础上添加dataSource前缀并改为小驼峰格式
+     * 可以扩展为 db2、db3...dbn 等多个数据源
      */
     public static final String DATA_SOURCE_OFFICIAL = "official-ds";
 
-
+    /**
+     * 租户数据源命名模式
+     * 用于动态生成租户专属数据源的名称模板
+     * 格式：tenant_{租户ID}_{数据库标识}
+     * 示例：tenant_123_main, tenant_456_report
+     */
     public static final String DS_NAME_PREFIX = "tenant_%s_%s";
 }

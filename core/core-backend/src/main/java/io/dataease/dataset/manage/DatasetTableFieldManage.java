@@ -35,7 +35,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 数据集表字段管理类
+ * 负责数据集字段的增删改查和字段相关的业务逻辑
+ * 支持原始字段、计算字段、分组字段等多种字段类型
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>字段的保存和更新</li>
+ *   <li>字段批量保存和删除</li>
+ *   <li>字段名称唯一性校验</li>
+ *   <li>图表计算字段管理</li>
+ *   <li>字段类型转换</li>
+ *   <li>字段权限过滤</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 @Transactional

@@ -6,9 +6,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 系统菜单实体类
+ *
+ * 功能描述：
+ * 表示系统中的菜单项，用于构建前端导航和路由
+ * 支持多层级菜单结构（通过pid字段）
+ *
+ * 菜单类型：
+ * - 0: 菜单项（具体的功能页面）
+ * - 1: 目录（菜单分组，不含具体页面）
+ *
+ * 数据表：core_menu
  *
  * @author fit2cloud
  * @since 2023-06-02
@@ -19,58 +27,74 @@ public class CoreMenu implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键
+     * 主键ID
+     * 自增主键，唯一标识一个菜单项
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 父ID
+     * 父菜单ID
+     * 用于构建树形结构，顶级菜单的pid为0
      */
     private Long pid;
 
     /**
-     * 类型
+     * 菜单类型
+     * 0: 菜单项（具体页面）
+     * 1: 目录（分组）
      */
     private Integer type;
 
     /**
-     * 名称
+     * 菜单名称
+     * 存储的是国际化key，例如："sys_manage"
+     * 实际显示的名称通过i18n_menu.sys_manage获取
      */
     private String name;
 
     /**
-     * 组件
+     * 前端组件路径
+     * 对应的Vue组件路径，例如："system/index.vue"
      */
     private String component;
 
     /**
-     * 排序
+     * 菜单排序
+     * 数值越小排序越靠前，用于控制菜单显示顺序
      */
     private Integer menuSort;
 
     /**
-     * 图标
+     * 菜单图标
+     * 图标名称或图标类名，用于前端显示
      */
     private String icon;
 
     /**
-     * 路径
+     * 路由路径
+     * 前端路由的路径，例如："/system"
      */
     private String path;
 
     /**
-     * 隐藏
+     * 是否隐藏
+     * true: 隐藏该菜单（不在导航中显示）
+     * false: 正常显示
      */
     private Boolean hidden;
 
     /**
-     * 是否内部
+     * 是否在布局内
+     * true: 菜单在系统布局内显示
+     * false: 菜单使用独立布局（如登录页）
      */
     private Boolean inLayout;
 
     /**
-     * 参与授权
+     * 是否参与权限控制
+     * true: 需要权限验证
+     * false: 不需要权限验证（公开菜单）
      */
     private Boolean auth;
 

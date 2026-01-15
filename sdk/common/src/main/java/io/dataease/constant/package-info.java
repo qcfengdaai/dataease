@@ -116,7 +116,18 @@
  *   <li>便于通配符匹配和批量删除</li>
  * </ul>
  *
- * @author DataEase
+ * <h2>最近更新内容</h2>
+ * <p><b>本次更新（2025年1月）为所有常量类添加了详细的中文JavaDoc注释：</b></p>
+ * <ul>
+ *   <li>为AuthEnum、MessageEnum、AuthConstant等核心类添加了完整的类级文档</li>
+ *   <li>为每个常量和枚举值添加了详细的中文说明和使用场景</li>
+ *   <li>规范化了所有JavaDoc注释的格式和内容结构</li>
+ *   <li>增加了实用方法的参数说明和返回值描述</li>
+ *   <li>统一了术语翻译和技术概念的中文表达</li>
+ * </ul>
+ *
+ * @author fit2cloud
+ * @version 2.0 (已添加完整中文注释)
  * @since 1.0.0
  */
 package io.dataease.constant;

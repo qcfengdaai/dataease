@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 核心存储实体
+ * 用于存储用户的收藏资源信息
  *
  * @author fit2cloud
  * @since 2023-08-24

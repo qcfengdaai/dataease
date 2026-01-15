@@ -4,9 +4,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 组件图表表
- * </p>
+ * 图表视图实体类
+ * 对应数据库表 core_chart_view，用于存储图表的元数据信息
+ * 包含图表的基本属性、样式配置、数据查询条件等
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>图表的基本信息存储（标题、类型、数据源等）</li>
+ *   <li>图表的样式和配置信息</li>
+ *   <li>图表的数据查询条件</li>
+ *   <li>图表的权限和生命周期管理</li>
+ * </ul>
  *
  * @author fit2cloud
  * @since 2024-12-12

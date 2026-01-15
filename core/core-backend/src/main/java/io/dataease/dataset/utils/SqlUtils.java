@@ -14,11 +14,32 @@ import java.util.List;
 import static org.apache.calcite.sql.SqlKind.*;
 
 /**
- * @Author Junjun
+ * SQL处理工具类
+ * 基于Apache Calcite提供SQL解析、转换和优化功能
+ * 主要用于为SQL语句添加schema信息和进行语法分析
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>SQL语句解析和AST语法树构建</li>
+ *   <li>为表名添加schema前缀</li>
+ *   <li>SQL语句的格式化和优化</li>
+ *   <li>支持各种SQL语句类型的处理</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 public class SqlUtils {
     public static Logger logger = LoggerFactory.getLogger(SqlUtils.class);
 
+    /**
+     * 为SQL语句中的表名添加schema信息
+     * 解析SQL语句并为其中的表名添加指定的schema前缀
+     *
+     * @param sql    原始SQL语句
+     * @param schema 要添加的schema名称
+     * @return 添加schema后的SQL语句
+     * @throws DEException 当SQL解析失败时抛出异常
+     */
     public static String addSchema(String sql, String schema) {
         sql = sql.trim();
         if (sql.endsWith(";")) {
@@ -46,6 +67,17 @@ public class SqlUtils {
         return sqlRender;
     }
 
+    /**
+     * 递归为SQL语法树中的表名添加schema信息
+     * 遍历SQL语法树的各个节点，识别表名并添加schema前缀
+     * 支持多种SQL语句类型：SELECT、UNION、JOIN、WHERE条件等
+     *
+     * @param sqlNode    SQL语法树节点
+     * @param fromOrJoin 是否处于FROM或JOIN子句中
+     * @param schema     要添加的schema名称
+     * @param config     SQL解析器配置
+     * @throws DEException 当语法分析异常时抛出
+     */
     private static void addTableSchema(SqlNode sqlNode, Boolean fromOrJoin, String schema, SqlParser.Config config) {
         try {
             if (sqlNode.getKind() == JOIN) {

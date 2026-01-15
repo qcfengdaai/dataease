@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 可视化模板扩展数据实体类
+ * 用于存储模板的扩展信息,如视图详情、复制来源等
  *
  * @author fit2cloud
  * @since 2023-11-10
@@ -16,16 +15,34 @@ public class VisualizationTemplateExtendData implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 主键
+     */
     private Long id;
 
+    /**
+     * 可视化ID
+     */
     private Long dvId;
 
+    /**
+     * 视图ID
+     */
     private Long viewId;
 
+    /**
+     * 视图详情(JSON格式)
+     */
     private String viewDetails;
 
+    /**
+     * 复制来源
+     */
     private String copyFrom;
 
+    /**
+     * 复制源ID
+     */
     private String copyId;
 
     public Long getId() {

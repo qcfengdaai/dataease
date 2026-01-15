@@ -51,7 +51,31 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 数据集分组管理类
+ * 负责数据集和文件夹的增删改查、树形结构管理等核心功能
+ * 协调数据集表、字段、权限等多个子模块完成复杂业务逻辑
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>数据集的创建、编辑、删除、移动</li>
+ *   <li>文件夹的层级管理</li>
+ *   <li>树形结构查询和构建</li>
+ *   <li>数据集关联关系的保存和更新</li>
+ *   <li>数据集权限树的维护</li>
+ *   <li>SQL联合查询的管理</li>
+ *   <li>名称重复性校验</li>
+ *   <li>级联删除（数据集及关联的表、字段）</li>
+ * </ul>
+ *
+ * <p>使用场景：</p>
+ * <ul>
+ *   <li>数据集编辑器的保存操作</li>
+ *   <li>数据集列表的树形展示</li>
+ *   <li>数据集的拖拽移动</li>
+ *   <li>权限树的构建</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 @Transactional(rollbackFor = Exception.class)
@@ -87,11 +111,25 @@ public class DatasetGroupManage {
     @Autowired(required = false)
     private PluginManageApi pluginManage;
 
+    /**
+     * 叶子节点类型常量
+     * 标识一个节点是数据集而非文件夹
+     */
     private static final String leafType = "dataset";
 
     private Lock lock = new ReentrantLock();
 
 
+    /**
+     * 保存数据集或文件夹
+     * 支持新建和更新操作，处理数据集关联关系和字段信息
+     *
+     * @param datasetGroupInfoDTO 数据集信息
+     * @param rename 是否为重命名操作
+     * @param encode 是否对敏感信息进行编码
+     * @return 保存后的数据集信息
+     * @throws Exception 保存失败时抛出异常
+     */
     @Transactional
     public DatasetGroupInfoDTO save(DatasetGroupInfoDTO datasetGroupInfoDTO, boolean rename, boolean encode) throws Exception {
         try {
@@ -160,6 +198,13 @@ public class DatasetGroupManage {
         return null;
     }
 
+    /**
+     * 内部编辑方法
+     * 执行数据集的数据库更新操作，并进行名称校验
+     * 此方法会触发企业版权限树的同步更新
+     *
+     * @param datasetGroupInfoDTO 数据集信息
+     */
     @XpackInteract(value = "authResourceTree", before = false)
     public void innerEdit(DatasetGroupInfoDTO datasetGroupInfoDTO) {
         checkName(datasetGroupInfoDTO);
@@ -169,6 +214,13 @@ public class DatasetGroupManage {
         coreOptRecentManage.saveOpt(datasetGroupInfoDTO.getId(), OptConstants.OPT_RESOURCE_TYPE.DATASET, OptConstants.OPT_TYPE.UPDATE);
     }
 
+    /**
+     * 内部保存方法
+     * 执行数据集的数据库插入操作，并进行名称校验
+     * 此方法会触发企业版权限树的同步更新
+     *
+     * @param datasetGroupInfoDTO 数据集信息
+     */
     @XpackInteract(value = "authResourceTree", before = false)
     public void innerSave(DatasetGroupInfoDTO datasetGroupInfoDTO) {
         checkName(datasetGroupInfoDTO);
@@ -177,6 +229,13 @@ public class DatasetGroupManage {
         coreOptRecentManage.saveOpt(coreDatasetGroup.getId(), OptConstants.OPT_RESOURCE_TYPE.DATASET, OptConstants.OPT_TYPE.NEW);
     }
 
+    /**
+     * 移动数据集或文件夹
+     * 将节点移动到新的父节点下，进行移动合法性校验
+     *
+     * @param datasetGroupInfoDTO 包含新父节点ID的数据集信息
+     * @return 移动后的数据集信息
+     */
     @XpackInteract(value = "authResourceTree", before = false)
     public DatasetGroupInfoDTO move(DatasetGroupInfoDTO datasetGroupInfoDTO) {
         checkName(datasetGroupInfoDTO);
@@ -194,6 +253,13 @@ public class DatasetGroupManage {
         return datasetGroupInfoDTO;
     }
 
+    /**
+     * 检查数据集是否被权限引用
+     * 在企业版中，删除前检查是否有权限资源引用该数据集
+     *
+     * @param id 数据集ID
+     * @return true表示被引用不能删除，false表示可以删除
+     */
     public boolean perDelete(Long id) {
         if (LicenseUtil.licenseValid()) {
             try {
@@ -209,6 +275,13 @@ public class DatasetGroupManage {
         return false;
     }
 
+    /**
+     * 删除数据集或文件夹
+     * 执行级联删除，删除节点及其所有子节点和关联数据
+     * 此方法会触发企业版权限树的同步更新
+     *
+     * @param id 数据集或文件夹ID
+     */
     @XpackInteract(value = "authResourceTree", before = false)
     public void delete(Long id) {
         CoreDatasetGroup coreDatasetGroup = coreDatasetGroupMapper.selectById(id);
@@ -219,6 +292,12 @@ public class DatasetGroupManage {
         coreOptRecentManage.saveOpt(coreDatasetGroup.getId(), OptConstants.OPT_RESOURCE_TYPE.DATASET, OptConstants.OPT_TYPE.DELETE);
     }
 
+    /**
+     * 递归删除节点及其子节点
+     * 删除数据集分组、关联的数据表、字段，并递归处理所有子节点
+     *
+     * @param id 节点ID
+     */
     public void recursionDel(Long id) {
         coreDatasetGroupMapper.deleteById(id);
         datasetTableManage.deleteByDatasetGroupDelete(id);
@@ -235,6 +314,14 @@ public class DatasetGroupManage {
     }
 
 
+    /**
+     * 查询数据集树形结构
+     * 构建数据集的层级树，支持按类型过滤和权限控制
+     * 此方法在企业版中会被权限树替换
+     *
+     * @param request 树查询请求，可指定节点类型（folder/dataset）
+     * @return 树形节点列表
+     */
     @XpackInteract(value = "authResourceTree", replace = true, invalid = true)
     public List<BusiNodeVO> tree(BusiNodeRequest request) {
 
@@ -257,6 +344,13 @@ public class DatasetGroupManage {
         return TreeUtils.mergeTree(nodes, BusiNodeVO.class, false);
     }
 
+    /**
+     * 查询数据集详情栏信息
+     * 获取数据集的创建人、更新人、关联数据源等详细信息
+     *
+     * @param id 数据集ID
+     * @return 数据集详情信息
+     */
     public DataSetBarVO queryBarInfo(Long id) {
         DataSetBarVO dataSetBarVO = coreDataSetExtMapper.queryBarInfo(id);
         // get creator

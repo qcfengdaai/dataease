@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
+ * 项目启动任务实体类
  * <p>
- * 项目启动任务
+ * 用于记录系统启动时需要执行的任务及其执行状态
  * </p>
  *
  * @author fit2cloud

@@ -27,6 +27,22 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 权限管理类
+ * 负责数据集的行权限和列权限控制
+ * 支持企业版的细粒度权限管理，社区版为空实现
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>列权限过滤（字段可见性和脱敏）</li>
+ *   <li>行权限过滤（数据行级别访问控制）</li>
+ *   <li>权限树的构建</li>
+ *   <li>用户和角色权限的合并</li>
+ *   <li>系统管理员权限豁免</li>
+ * </ul>
+ *
+ * @author Junjun
+ */
 @Service
 public class PermissionManage {
 

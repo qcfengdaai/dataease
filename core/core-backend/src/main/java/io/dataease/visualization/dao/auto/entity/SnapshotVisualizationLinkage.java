@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 联动记录表
- * </p>
+ * 快照可视化联动实体
+ * 用于存储可视化联动的快照数据
  *
  * @author fit2cloud
  * @since 2025-03-24

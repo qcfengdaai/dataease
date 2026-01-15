@@ -25,6 +25,24 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.*;
 
 
+/**
+ * 数据集树服务控制器
+ * 提供数据集和文件夹的树形结构管理API接口
+ * 实现DatasetTreeApi接口，作为数据集核心操作的HTTP入口
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>数据集CRUD: save, create, delete, move</li>
+ *   <li>树形查询: tree</li>
+ *   <li>详情查询: barInfo, get, details</li>
+ *   <li>SQL参数: getSqlParams</li>
+ *   <li>数据集导出: exportDataset</li>
+ * </ul>
+ *
+ * <p>所有操作都会记录操作日志</p>
+ *
+ * @author Junjun
+ */
 @RestController
 @RequestMapping("datasetTree")
 public class DatasetTreeServer implements DatasetTreeApi {

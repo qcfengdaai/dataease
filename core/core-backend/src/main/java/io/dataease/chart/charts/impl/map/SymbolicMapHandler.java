@@ -36,6 +36,13 @@ public class SymbolicMapHandler extends GroupChartHandler {
     @Getter
     private String type = "symbolic-map";
 
+    /**
+     * 格式化坐标轴
+     * 处理符号地图的坐标轴配置，包括气泡字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含气泡字段配置
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);
@@ -51,6 +58,18 @@ public class SymbolicMapHandler extends GroupChartHandler {
         return ChartDataBuild.transSymbolicMapNormalWithDetail(view, xAxis, yAxis, extBubble, data, detailFields, detailData);
     }
 
+    /**
+     * 计算图表数据结果
+     * 执行符号地图的数据计算，获取聚合数据和详细信息
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param sqlMap SQL相关映射（包含数据源信息）
+     * @param sqlMeta SQL元数据对象
+     * @param provider 数据源提供者
+     * @return 图表计算结果，包含聚合数据和详细信息
+     */
     @Override
     public <T extends ChartCalcDataResult> T calcChartResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, Map<String, Object> sqlMap, SQLMeta sqlMeta, Provider provider) {
         var dsMap = (Map<Long, DatasourceSchemaDTO>) sqlMap.get("dsMap");
@@ -122,6 +141,16 @@ public class SymbolicMapHandler extends GroupChartHandler {
         return calcResult;
     }
 
+    /**
+     * 构建图表视图
+     * 将计算结果转换为符号地图视图对象
+     *
+     * @param view 图表视图信息
+     * @param calcResult 图表计算结果
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @return 构建完成的图表视图对象
+     */
     @Override
     public ChartViewDTO buildChart(ChartViewDTO view, ChartCalcDataResult calcResult, AxisFormatResult formatResult, CustomFilterResult filterResult) {
         var desensitizationList = (Map<String, ColumnPermissionItem>) filterResult.getContext().get("desensitizationList");

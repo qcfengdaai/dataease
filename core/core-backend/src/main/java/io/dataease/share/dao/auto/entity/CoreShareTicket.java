@@ -4,9 +4,16 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 分享Ticket票据实体类
+ *
+ * 对应数据库表core_share_ticket，用于存储分享链接的访问票据信息
+ * <p>功能包括：</p>
+ * <ul>
+ * <li>为分享链接生成唯一的访问票据</li>
+ * <li>支持票据有效期控制（单位：分钟）</li>
+ * <li>记录票据的首次访问时间</li>
+ * <li>支持自定义票据参数</li>
+ * </ul>
  *
  * @author fit2cloud
  * @since 2024-06-21

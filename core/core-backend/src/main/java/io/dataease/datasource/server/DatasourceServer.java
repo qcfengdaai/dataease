@@ -71,6 +71,22 @@ import static io.dataease.datasource.server.DatasourceTaskServer.ScheduleType.MA
 import static io.dataease.datasource.server.DatasourceTaskServer.ScheduleType.RIGHTNOW;
 
 
+/**
+ * 数据源服务控制器
+ * 提供数据源的增删改查、连接测试、同步任务等API接口
+ * 实现DatasourceApi接口，作为数据源管理的HTTP入口
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>数据源CRUD: save, update, delete, list</li>
+ *   <li>连接测试: validate</li>
+ *   <li>同步任务: syncTask, updateSyncStatus</li>
+ *   <li>数据源树: tree</li>
+ *   <li>驱动管理: driverUpload, driverList</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @RestController
 @RequestMapping("/datasource")
 public class DatasourceServer implements DatasourceApi {

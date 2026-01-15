@@ -10,8 +10,33 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * 饼图处理器
+ * 负责饼图、环形图及其变体的数据处理和渲染
+ * 继承YoyChartHandler支持同比环比计算
+ *
+ * <p>支持的图表类型：</p>
+ * <ul>
+ *   <li>基础饼图 (pie)</li>
+ *   <li>玫瑰图 (pie-rose)</li>
+ *   <li>环形图 (pie-donut)</li>
+ *   <li>环形玫瑰图 (pie-donut-rose)</li>
+ * </ul>
+ *
+ * <p>特殊处理：</p>
+ * <ul>
+ *   <li>自动过滤负值数据</li>
+ *   <li>百分比计算和显示</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @Component
 public class PieHandler extends YoyChartHandler {
+    /**
+     * 初始化处理器
+     * 注册饼图、玫瑰图、环形图和环形玫瑰图的处理器
+     */
     @Override
     public void init() {
         chartHandlerManager.registerChartHandler(this.getRender(), "pie", this);
@@ -20,6 +45,13 @@ public class PieHandler extends YoyChartHandler {
         chartHandlerManager.registerChartHandler(this.getRender(), "pie-donut-rose", this);
     }
 
+    /**
+     * 格式化坐标轴
+     * 处理饼图的坐标轴配置，包括扩展标签和提示字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含扩展标签和提示字段
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);
@@ -31,6 +63,16 @@ public class PieHandler extends YoyChartHandler {
         return result;
     }
 
+    /**
+     * 构建图表视图
+     * 将计算结果转换为饼图视图对象，并过滤负值数据
+     *
+     * @param view 图表视图信息
+     * @param calcResult 图表计算结果
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @return 构建完成的饼图视图对象，已过滤负值
+     */
     @Override
     public ChartViewDTO buildChart(ChartViewDTO view, ChartCalcDataResult calcResult, AxisFormatResult formatResult, CustomFilterResult filterResult) {
         ChartViewDTO result = super.buildChart(view, calcResult, formatResult, filterResult);

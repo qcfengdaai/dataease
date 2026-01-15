@@ -11,6 +11,29 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+/**
+ * Quartz调度管理器
+ * 负责管理系统中所有的定时任务，包括任务的创建、修改、删除、暂停和恢复
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>支持Cron表达式定时任务</li>
+ *   <li>支持简单间隔定时任务</li>
+ *   <li>支持一次性任务</li>
+ *   <li>任务的动态添加、修改和删除</li>
+ *   <li>任务的暂停和恢复</li>
+ *   <li>任务执行状态查询</li>
+ * </ul>
+ *
+ * <p>使用场景：</p>
+ * <ul>
+ *   <li>数据集定时更新</li>
+ *   <li>数据同步任务</li>
+ *   <li>数据填报任务</li>
+ *   <li>报表生成任务</li>
+ *   <li>数据源状态检查</li>
+ * </ul>
+ */
 @Component
 public class ScheduleManager {
 
@@ -18,31 +41,37 @@ public class ScheduleManager {
     private Scheduler scheduler;
 
     /**
-     * 添加 simpleJob
+     * 添加简单间隔定时任务
+     * 按固定时间间隔重复执行的任务
      *
-     * @param jobKey
-     * @param triggerKey
-     * @param cls
-     * @param repeatIntervalTime
-     * @param jobDataMap
-     * @throws SchedulerException
+     * @param jobKey 任务唯一标识
+     * @param triggerKey 触发器唯一标识
+     * @param cls 任务执行类
+     * @param repeatIntervalTime 重复间隔时间（小时）
+     * @param jobDataMap 任务数据映射，可包含任务所需的参数
+     * @throws SchedulerException 调度异常
      */
     public void addSimpleJob(JobKey jobKey, TriggerKey triggerKey, Class<? extends Job> cls, int repeatIntervalTime,
                              JobDataMap jobDataMap) throws SchedulerException {
 
+        // 1. 创建Job构建器，设置Job类和唯一标识
         JobBuilder jobBuilder = JobBuilder.newJob(cls).withIdentity(jobKey);
 
+        // 2. 如果有任务数据，添加到JobDetail中
         if (jobDataMap != null) {
             jobBuilder.usingJobData(jobDataMap);
         }
 
+        // 3. 构建JobDetail对象
         JobDetail jd = jobBuilder.build();
 
+        // 4. 创建简单触发器，按指定小时间隔永久重复
         SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity(triggerKey)
                 .withSchedule(
                         SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(repeatIntervalTime).repeatForever())
                 .startNow().build();
 
+        // 5. 将任务和触发器注册到调度器
         scheduler.scheduleJob(jd, trigger);
     }
 
@@ -52,13 +81,16 @@ public class ScheduleManager {
     }
 
     /**
-     * 添加 cronJob
+     * 添加Cron表达式定时任务
+     * 使用Cron表达式定义复杂的调度时间规则
      *
-     * @param jobKey
-     * @param triggerKey
-     * @param jobClass
-     * @param cron
-     * @param jobDataMap
+     * @param jobKey 任务唯一标识
+     * @param triggerKey 触发器唯一标识
+     * @param jobClass 任务执行类
+     * @param cron Cron表达式，例如 "0 0 2 * * ?" 表示每天凌晨2点执行
+     * @param startTime 任务开始时间
+     * @param endTime 任务结束时间，null表示永久执行
+     * @param jobDataMap 任务数据映射
      */
     public void addCronJob(JobKey jobKey, TriggerKey triggerKey, Class jobClass, String cron, Date startTime,
                            Date endTime, JobDataMap jobDataMap) {
@@ -66,19 +98,24 @@ public class ScheduleManager {
 
             LogUtil.info("addCronJob: " + triggerKey.getName() + "," + triggerKey.getGroup());
 
+            // 1. 创建JobDetail，设置Job类、唯一标识和任务数据
             JobBuilder jobBuilder = JobBuilder.newJob(jobClass).withIdentity(jobKey);
             if (jobDataMap != null) {
                 jobBuilder.usingJobData(jobDataMap);
             }
             JobDetail jobDetail = jobBuilder.build();
 
+            // 2. 创建触发器构建器
             TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger();
 
+            // 3. 设置触发器的唯一标识
             triggerBuilder.withIdentity(triggerKey);
 
+            // 4. 计算首次执行时间
             Date nTimeByCron = getNTimeByCron(cron, startTime);
             triggerBuilder.startAt(nTimeByCron);
 
+            // 5. 设置结束时间，如果结束时间早于开始时间，则使用开始时间
             if (endTime != null) {
                 if (endTime.before(nTimeByCron)) {
                     triggerBuilder.endAt(nTimeByCron);
@@ -86,13 +123,17 @@ public class ScheduleManager {
                     triggerBuilder.endAt(endTime);
                 }
             } else {
+                // 没有结束时间，任务永久执行
                 triggerBuilder.endAt(null);
             }
 
+            // 6. 设置Cron调度表达式
             triggerBuilder.withSchedule(CronScheduleBuilder.cronSchedule(cron));
 
+            // 7. 构建Cron触发器
             CronTrigger trigger = (CronTrigger) triggerBuilder.build();
 
+            // 8. 将任务和触发器注册到调度器
             scheduler.scheduleJob(jobDetail, trigger);
 
         } catch (Exception e) {
@@ -106,23 +147,37 @@ public class ScheduleManager {
         addCronJob(jobKey, triggerKey, jobClass, cron, startTime, endTime, null);
     }
 
+    /**
+     * 添加一次性任务
+     * 在指定时间执行一次的任务，执行后自动删除
+     *
+     * @param jobKey 任务唯一标识
+     * @param triggerKey 触发器唯一标识
+     * @param jobClass 任务执行类
+     * @param date 执行时间
+     * @param jobDataMap 任务数据映射
+     */
     public void addSingleJob(JobKey jobKey, TriggerKey triggerKey, Class jobClass, Date date, JobDataMap jobDataMap) {
         try {
             LogUtil.info("addSingleJob: " + triggerKey.getName() + "," + triggerKey.getGroup());
 
+            // 1. 创建JobDetail
             JobBuilder jobBuilder = JobBuilder.newJob(jobClass).withIdentity(jobKey);
             if (jobDataMap != null) {
                 jobBuilder.usingJobData(jobDataMap);
             }
             JobDetail jobDetail = jobBuilder.build();
 
+            // 2. 创建一次性触发器
             TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger();
 
             triggerBuilder.withIdentity(triggerKey);
 
+            // 3. 设置执行时间并立即启动调度器
             triggerBuilder.startAt(date).startNow();
             Trigger trigger = triggerBuilder.build();
 
+            // 4. 注册任务
             scheduler.scheduleJob(jobDetail, trigger);
 
         } catch (Exception e) {
@@ -136,11 +191,14 @@ public class ScheduleManager {
     }
 
     /**
-     * 修改 cronTrigger
+     * 修改Cron任务的触发时间
+     * 更新已存在任务的Cron表达式和时间范围
      *
-     * @param triggerKey
-     * @param cron
-     * @throws SchedulerException
+     * @param triggerKey 要修改的触发器唯一标识
+     * @param cron 新的Cron表达式
+     * @param startTime 新的开始时间
+     * @param endTime 新的结束时间
+     * @throws SchedulerException 调度异常
      */
     public void modifyCronJobTime(TriggerKey triggerKey, String cron, Date startTime, Date endTime)
             throws SchedulerException {
@@ -148,20 +206,25 @@ public class ScheduleManager {
         LogUtil.info("modifyCronJobTime: " + triggerKey.getName() + "," + triggerKey.getGroup());
 
         try {
+            // 1. 获取现有的触发器
             CronTrigger trigger = (CronTrigger) scheduler.getTrigger(triggerKey);
 
+            // 2. 如果触发器不存在，直接返回
             if (trigger == null) {
                 return;
             }
 
-            /** 方式一 ：调用 rescheduleJob 开始 */
-            TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger();// 触发器
+            // 3. 创建新的触发器构建器，用于更新触发器配置
+            TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger();
 
-            triggerBuilder.withIdentity(triggerKey);// 触发器名,触发器组
+            // 4. 设置触发器标识
+            triggerBuilder.withIdentity(triggerKey);
 
+            // 5. 计算并设置新的开始时间
             Date nTimeByCron = getNTimeByCron(cron, startTime);
             triggerBuilder.startAt(nTimeByCron);
 
+            // 6. 设置结束时间，如果结束时间早于开始时间，则使用开始时间
             if (endTime != null) {
                 if (endTime.before(nTimeByCron)) {
                     triggerBuilder.endAt(nTimeByCron);
@@ -169,14 +232,18 @@ public class ScheduleManager {
                     triggerBuilder.endAt(endTime);
                 }
             } else {
+                // 没有结束时间，任务永久执行
                 triggerBuilder.endAt(null);
             }
 
-            triggerBuilder.withSchedule(CronScheduleBuilder.cronSchedule(cron));// 触发器时间设定
+            // 7. 设置新的Cron调度表达式
+            triggerBuilder.withSchedule(CronScheduleBuilder.cronSchedule(cron));
 
-            trigger = (CronTrigger) triggerBuilder.build();// 创建Trigger对象
+            // 8. 构建新的触发器对象
+            trigger = (CronTrigger) triggerBuilder.build();
 
-            scheduler.rescheduleJob(triggerKey, trigger);// 修改一个任务的触发时间
+            // 9. 重新调度任务，替换旧的触发器
+            scheduler.rescheduleJob(triggerKey, trigger);
         } catch (Exception e) {
             DEException.throwException(e);
         }
@@ -508,43 +575,73 @@ public class ScheduleManager {
     }
 
     /**
-     * 构建simpleTrigger
+     * 构建简单触发器
+     * 根据时间间隔字符串创建对应的简单触发器
      *
+     * 支持的时间间隔格式：
+     * - 30s: 每30秒
+     * - 5m: 每5分钟
+     * - 2h: 每2小时
+     * - 7d: 每7天（7*24小时）
+     *
+     * @param triggerKey 触发器唯一标识
+     * @param period 时间间隔字符串，格式：数字+单位
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 构建好的触发器构建器
      */
     private TriggerBuilder<SimpleTrigger> simpleJobTriggerBuilder(TriggerKey triggerKey, String period, Date startTime, Date endTime) {
+        // 创建简单调度构建器
         SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule();
+
+        // 解析时间间隔字符串并设置间隔
         if (period != null && period.length() > 1) {
+            // 提取数字部分
             String number = period.substring(0, period.length() - 1);
+            // 提取单位部分
             char unit = period.charAt(period.length() - 1);
+
+            // 根据单位设置不同的间隔
             switch (unit) {
-                case 's':
+                case 's': // 秒
                     scheduleBuilder.withIntervalInSeconds(Integer.parseInt(number));
                     break;
-                case 'm':
+                case 'm': // 分钟
                     scheduleBuilder.withIntervalInMinutes(Integer.parseInt(number));
                     break;
-                case 'h':
+                case 'h': // 小时
                     scheduleBuilder.withIntervalInHours(Integer.parseInt(number));
                     break;
-                case 'd':
+                case 'd': // 天
                     scheduleBuilder.withIntervalInHours(Integer.parseInt(number) * 24);
                     break;
                 default:
+                    // 默认每1分钟
                     scheduleBuilder.withIntervalInMinutes(1);
             }
+            // 设置永久重复
             scheduleBuilder.repeatForever();
         } else {
+            // period为空或格式不正确，默认每1分钟
             scheduleBuilder.withIntervalInMinutes(1);
         }
+
+        // 创建触发器构建器并设置调度策略
         TriggerBuilder<SimpleTrigger> triggerBuilder = TriggerBuilder.newTrigger()
                 .withIdentity(triggerKey)
                 .withSchedule(scheduleBuilder);
+
+        // 设置开始时间
         if (startTime != null) {
             triggerBuilder.startAt(startTime);
         } else {
+            // 没有指定开始时间，立即开始
             triggerBuilder.startNow();
         }
+
+        // 设置结束时间
         triggerBuilder.endAt(endTime);
+
         return triggerBuilder;
     }
 

@@ -10,8 +10,22 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
+/**
+ * 图表数据工具类
+ * 提供图表数据处理、排序、转换和脱敏等功能
+ */
 public class ChartDataUtil {
-    // 对结果排序
+
+    /**
+     * 对查询结果进行自定义排序
+     * 根据X轴、Y轴字段和排序优先级对图表数据进行排序处理
+     *
+     * @param xAxis X轴字段列表
+     * @param yAxis Y轴字段列表
+     * @param sortPriority 排序优先级配置
+     * @param data 待排序的原始数据
+     * @return 排序后的数据列表
+     */
     public static List<String[]> resultCustomSort(List<ChartViewFieldDTO> xAxis,List<ChartViewFieldDTO> yAxis, List<SortAxis> sortPriority, List<String[]> data) {
         List<String[]> res = new ArrayList<>(data);
         var axisList = new ArrayList<ChartViewFieldDTO>();
@@ -82,6 +96,15 @@ public class ChartDataUtil {
         return res;
     }
 
+    /**
+     * 执行自定义排序
+     * 根据自定义排序规则对数据进行排序，自定义顺序的数据排在前面，其他数据排在后面
+     *
+     * @param custom 自定义排序顺序列表
+     * @param data 待排序的数据列表
+     * @param index 进行排序的列索引
+     * @return 排序后的数据列表
+     */
     public static List<String[]> customSort(List<String> custom, List<String[]> data, int index) {
         List<String[]> res = new ArrayList<>();
         
@@ -121,6 +144,16 @@ public class ChartDataUtil {
         return res;
     }
 
+    /**
+     * 转换表格数据为标准格式
+     * 将原始查询数据转换为表格展示所需的标准格式，并处理数据脱敏
+     *
+     * @param fields 字段列表
+     * @param view 图表视图配置
+     * @param data 原始数据列表
+     * @param desensitizationList 脱敏规则配置表
+     * @return 包含字段信息和表格行数据的Map对象
+     */
     public static Map<String, Object> transTableNormal(List<ChartViewFieldDTO> fields, ChartViewDTO view, List<String[]> data, Map<String, ColumnPermissionItem> desensitizationList) {
         Map<String, Object> map = new TreeMap<>();
         List<Map<String, Object>> tableRow = new ArrayList<>();
@@ -146,6 +179,14 @@ public class ChartDataUtil {
         return map;
     }
 
+    /**
+     * 数据脱敏处理
+     * 根据列权限配置对原始字符串进行脱敏处理
+     *
+     * @param columnPermissionItem 列权限配置项，包含脱敏规则
+     * @param originStr 原始字符串
+     * @return 脱敏处理后的字符串
+     */
     public static String desensitizationValue(ColumnPermissionItem columnPermissionItem, String originStr) {
         String desensitizationStr = "";
         if (!columnPermissionItem.getDesensitizationRule().getBuiltInRule().toString().equalsIgnoreCase("custom")) {

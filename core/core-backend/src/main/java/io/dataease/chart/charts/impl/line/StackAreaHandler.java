@@ -26,6 +26,13 @@ public class StackAreaHandler extends YoyChartHandler {
     @Getter
     private String type = "area-stack";
 
+    /**
+     * 格式化坐标轴
+     * 处理堆叠面积图的坐标轴配置，包括堆叠字段和扩展标签、提示字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含堆叠字段、扩展标签和提示字段
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);
@@ -40,6 +47,16 @@ public class StackAreaHandler extends YoyChartHandler {
         return result;
     }
 
+    /**
+     * 构建标准图表结果
+     * 将查询数据转换为堆叠面积图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的堆叠面积图数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult
@@ -54,6 +71,15 @@ public class StackAreaHandler extends YoyChartHandler {
         return ChartDataBuild.transStackChartDataAntV(xAxisBase, xAxis, yAxis, view, data, extStack, isDrill);
     }
 
+    /**
+     * 自定义过滤器处理
+     * 处理堆叠维度下钻的过滤逻辑
+     *
+     * @param view 图表视图信息
+     * @param filterList 过滤条件列表
+     * @param formatResult 坐标轴格式化结果
+     * @return 自定义过滤结果，包含下钻后的过滤条件
+     */
     @Override
     public <T extends CustomFilterResult> T customFilter(ChartViewDTO view, List<ChartExtFilterDTO> filterList, AxisFormatResult formatResult) {
         var result = super.customFilter(view, filterList, formatResult);
@@ -83,6 +109,18 @@ public class StackAreaHandler extends YoyChartHandler {
         return (T) result;
     }
 
+    /**
+     * 计算图表数据结果
+     * 执行堆叠面积图的数据计算，包括辅助线、辅助字段等特殊处理
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param sqlMap SQL相关映射（包含数据源信息）
+     * @param sqlMeta SQL元数据对象
+     * @param provider 数据源提供者
+     * @return 图表计算结果，包含辅助线数据
+     */
     @Override
     public <T extends ChartCalcDataResult> T calcChartResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, Map<String, Object> sqlMap, SQLMeta sqlMeta, Provider provider) {
         var dsMap = (Map<Long, DatasourceSchemaDTO>) sqlMap.get("dsMap");

@@ -31,8 +31,11 @@ import java.util.*;
 import static io.dataease.constant.StaticResourceConstants.UPLOAD_URL_PREFIX;
 
 /**
- * @author : WangJiaHao
- * @date : 2023/11/7 13:29
+ * 模板管理服务类
+ * 提供模板的创建、查询、更新、删除等管理功能
+ *
+ * @author WangJiaHao
+ * @date 2023/11/7 13:29
  */
 @RestController
 @RequestMapping("/templateManage")
@@ -50,6 +53,11 @@ public class TemplateManageService implements TemplateManageApi {
     @Resource
     private StaticResourceServer staticResourceServer;
 
+    /**
+     * 查询模板列表
+     * @param request 查询请求参数
+     * @return 模板列表
+     */
     @Override
     public List<TemplateManageDTO> templateList(TemplateManageRequest request) {
         request.setWithBlobs("N");

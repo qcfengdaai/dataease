@@ -6,7 +6,9 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
- *  Mapper 接口
+ * 核心操作记录 Mapper 接口
+ * 提供对 core_opt_recent 表的数据库操作
+ * 继承 MyBatis Plus 的 BaseMapper,包含基础 CRUD 方法
  * </p>
  *
  * @author fit2cloud

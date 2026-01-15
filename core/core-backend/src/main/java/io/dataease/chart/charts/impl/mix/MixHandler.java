@@ -25,6 +25,13 @@ public class MixHandler extends YoyChartHandler {
     @Getter
     private final String type = "chart-mix";
 
+    /**
+     * 格式化坐标轴
+     * 处理混合图的坐标轴配置，包括左轴和右轴的配置
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含左轴、右轴的完整配置
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var axisMap = new HashMap<ChartAxis, List<ChartViewFieldDTO>>();
@@ -53,6 +60,16 @@ public class MixHandler extends YoyChartHandler {
         return result;
     }
 
+    /**
+     * 构建标准图表结果
+     * 将查询数据转换为混合图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的混合图数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult
@@ -75,6 +92,18 @@ public class MixHandler extends YoyChartHandler {
         return result;
     }
 
+    /**
+     * 计算图表数据结果
+     * 执行混合图的数据计算，分别计算左轴和右轴的数据
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param sqlMap SQL相关映射（包含数据源信息）
+     * @param sqlMeta SQL元数据对象
+     * @param provider 数据源提供者
+     * @return 图表计算结果，包含左轴和右轴的数据
+     */
     @Override
     public <T extends ChartCalcDataResult> T calcChartResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, Map<String, Object> sqlMap, SQLMeta sqlMeta, Provider provider) {
         //计算左轴, 包含 xAxis, yAxis
@@ -201,6 +230,16 @@ public class MixHandler extends YoyChartHandler {
         return mixResult;
     }
 
+    /**
+     * 构建图表视图
+     * 将计算结果转换为混合图视图对象
+     *
+     * @param view 图表视图信息
+     * @param calcResult 图表计算结果
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @return 构建完成的混合图视图对象
+     */
     @Override
     public ChartViewDTO buildChart(ChartViewDTO view, ChartCalcDataResult calcResult, AxisFormatResult formatResult, CustomFilterResult filterResult) {
         var desensitizationList = (Map<String, ColumnPermissionItem>) filterResult.getContext().get("desensitizationList");

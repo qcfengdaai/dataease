@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 字体信息实体类
+ * 存储系统中可用字体的相关信息，包括字体名称、文件信息和配置属性
  *
  * @author fit2cloud
  * @since 2024-08-28
@@ -51,8 +50,16 @@ public class CoreFont implements Serializable {
      */
     private Boolean isBuiltin;
 
+    /**
+     * 字体大小
+     * 记录字体文件的大小，单位由sizeType字段指定
+     */
     private Double size;
 
+    /**
+     * 字体大小单位类型
+     * 如MB、KB等，表示字体文件大小的计量单位
+     */
     private String sizeType;
 
     public Long getId() {

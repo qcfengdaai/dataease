@@ -4,9 +4,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 
- * </p>
+ * 数据集表SQL执行日志实体类
+ * 对应数据库表 core_dataset_table_sql_log，用于记录数据集查询SQL的执行日志
+ * 提供SQL执行性能监控和调试信息
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>记录SQL执行的详细信息（开始时间、结束时间、耗时）</li>
+ *   <li>存储执行的SQL语句内容</li>
+ *   <li>跟踪SQL执行状态和结果</li>
+ *   <li>支持SQL性能分析和优化</li>
+ * </ul>
  *
  * @author fit2cloud
  * @since 2023-08-08

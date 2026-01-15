@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- *
- * </p>
+ * 可视化链接跳转实体
+ * 用于配置图表的跳转交互功能
  *
  * @author fit2cloud
  * @since 2023-09-22
@@ -16,6 +15,7 @@ public class VisualizationLinkJump implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** ID */
     private Long id;
 
     /**
@@ -38,8 +38,10 @@ public class VisualizationLinkJump implements Serializable {
      */
     private Boolean checked;
 
+    /** 复制来源 */
     private Long copyFrom;
 
+    /** 复制ID */
     private Long copyId;
 
     public Long getId() {

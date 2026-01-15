@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
+ * 系统字体实体类
  * <p>
- * 
+ * 用于管理系统支持的自定义字体，包括字体名称、文件路径等信息
  * </p>
  *
  * @author fit2cloud

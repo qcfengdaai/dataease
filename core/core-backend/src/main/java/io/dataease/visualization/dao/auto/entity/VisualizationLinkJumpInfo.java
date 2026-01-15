@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 跳转配置表
- * </p>
+ * 可视化链接跳转信息实体
+ * 用于配置图表跳转的详细参数
  *
  * @author fit2cloud
  * @since 2024-09-19

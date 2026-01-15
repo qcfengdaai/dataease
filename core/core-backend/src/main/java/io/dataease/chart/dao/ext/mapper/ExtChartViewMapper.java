@@ -11,6 +11,22 @@ import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
+/**
+ * 图表视图扩展数据访问层接口
+ * 提供对图表视图的复杂查询操作，包括跨表查询、自定义SQL等
+ * 通过 MyBatis 注解方式定义SQL语句
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>查询视图选择器列表（仪表板视图选择）</li>
+ *   <li>图表详情查询（支持核心表和快照表）</li>
+ *   <li>场景相关的批量查询和删除</li>
+ *   <li>数据集和图表关联查询</li>
+ * </ul>
+ *
+ * @author fit2cloud
+ * @since 2024-12-12
+ */
 @Mapper
 public interface ExtChartViewMapper {
 
@@ -44,6 +60,13 @@ public interface ExtChartViewMapper {
     List<Long> findDatasetGroupIdByDvId(@Param("dvId") String dvId);
 
 
+    /**
+     * 根据仪表板ID查找数据SQL机器人所需的数据集信息
+     * 查询仪表板使用的数据集、数据源等关联信息，用于SQL机器人功能
+     *
+     * @param dvId 仪表板ID
+     * @return 数据集和数据源信息列表
+     */
     @Select("""
             SELECT
              DISTINCT

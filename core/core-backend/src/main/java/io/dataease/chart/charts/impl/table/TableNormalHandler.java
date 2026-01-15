@@ -41,6 +41,15 @@ public class TableNormalHandler extends DefaultChartHandler {
     @Getter
     private final String type = "table-normal";
 
+    /**
+     * 自定义过滤器处理
+     * 处理表格的过滤器，包括分页模式和同环比过滤
+     *
+     * @param view 图表视图信息
+     * @param filterList 过滤条件列表
+     * @param formatResult 坐标轴格式化结果
+     * @return 自定义过滤结果，包含分页配置和同环比过滤标识
+     */
     @Override
     public <T extends CustomFilterResult> T customFilter(ChartViewDTO view, List<ChartExtFilterDTO> filterList, AxisFormatResult formatResult) {
         var chartExtRequest = view.getChartExtRequest();

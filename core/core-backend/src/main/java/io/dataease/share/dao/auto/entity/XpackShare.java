@@ -4,9 +4,16 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 公共链接
- * </p>
+ * Xpack分享实体类
+ *
+ * 对应数据库表xpack_share，用于存储公共链接的分享信息
+ * <p>功能包括：</p>
+ * <ul>
+ * <li>仪表板和数据大屏的公共链接分享</li>
+ * <li>支持访问密码保护</li>
+ * <li>支持访问有效期控制</li>
+ * <li>支持Ticket票据验证</li>
+ * </ul>
  *
  * @author fit2cloud
  * @since 2024-06-21

@@ -16,8 +16,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author : WangJiaHao
- * @date : 2023/6/12 19:31
+ * 可视化背景服务
+ * <p>
+ * 管理仪表板背景样式
+ * <p>
+ * 主要功能：
+ * <ul>
+ * <li>查询所有背景样式</li>
+ * <li>按分类返回背景样式</li>
+ * </ul>
+ *
+ * @author DataEase
+ * @since 2024-06-21
  */
 @RestController
 @RequestMapping("/visualizationBackground")
@@ -25,14 +35,27 @@ public class VisualizationBackgroundService implements VisualizationBackgroundAp
     @Resource
     VisualizationBackgroundMapper mapper;
 
+    /**
+     * 查询所有背景样式
+     * <p>
+     * 背景按分类进行分组返回
+     *
+     * @return 分类到背景列表的映射
+     */
     @Override
     public Map<String, List<VisualizationBackgroundVO>> findAll() {
+        // 1. 查询所有背景样式
         List<VisualizationBackground> result = mapper.selectList(new QueryWrapper<>());
+        // 2. 将实体转换为VO并进行分组
         return result.stream().map(vb ->{
+            // 2.1 创建VO对象
             VisualizationBackgroundVO vbVO = new VisualizationBackgroundVO();
+            // 2.2 复制属性
             BeanUtils.copyBean(vbVO,vb);
+            // 2.3 在名称前添加"仪表板"前缀（国际化）
             vbVO.setName(Translator.get("i18n_board")+vbVO.getName());
             return vbVO;
+        // 2.4 按分类字段进行分组，返回Map
         }).collect(Collectors.groupingBy(VisualizationBackgroundVO::getClassification));
     }
 }

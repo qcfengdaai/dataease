@@ -5,9 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * <p>
- * 模板表 Mapper 接口
- * </p>
+ * 可视化模板分类 Mapper 接口
+ * 提供模板分类表的数据库访问操作
  *
  * @author fit2cloud
  * @since 2023-12-04

@@ -54,7 +54,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 图表数据服务控制器
+ * 提供图表数据查询、计算、导出等API接口
+ * 实现ChartDataApi接口，作为图表数据操作的HTTP入口
+ *
+ * <p>主要接口：</p>
+ * <ul>
+ *   <li>图表数据查询: getData</li>
+ *   <li>图表数据导出: exportExcel, exportDetails</li>
+ *   <li>字段枚举值: getFieldEnum</li>
+ *   <li>数据详情查询: getDataFromDetail</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @RestController
 @RequestMapping("/chartData")
@@ -80,6 +92,14 @@ public class ChartDataServer implements ChartDataApi {
 
 
     @DeLinkPermit("#p0.sceneId")
+    /**
+     * 获取图表数据
+     * 根据图表视图信息查询并计算图表数据
+     *
+     * @param chartViewDTO 图表视图信息，包含图表ID、字段配置、过滤条件等
+     * @return 计算后的图表视图，包含数据、字段等信息
+     * @throws Exception 数据计算异常
+     */
     @Override
     public ChartViewDTO getData(ChartViewDTO chartViewDTO) throws Exception {
         try {
@@ -99,6 +119,13 @@ public class ChartDataServer implements ChartDataApi {
         return null;
     }
 
+    /**
+     * 查找Excel数据
+     * 为Excel导出查询图表数据，支持数据集原始数据导出
+     *
+     * @param request Excel导出请求，包含图表信息和导出类型
+     * @return 包含导出数据的图表视图信息
+     */
     public ChartViewDTO findExcelData(ChartExcelRequest request) {
         ChartViewDTO chartViewInfo = new ChartViewDTO();
         try {
@@ -156,6 +183,14 @@ public class ChartDataServer implements ChartDataApi {
     }
 
 
+    /**
+     * 数值格式化
+     * 根据格式化配置对数值进行格式化处理
+     *
+     * @param value 待格式化的数值
+     * @param formatter 格式化配置，包含类型、单位、小数位数等
+     * @return 格式化后的字符串
+     */
     public static String valueFormatter(BigDecimal value, FormatterCfgDTO formatter) {
         if (value == null) {
             return null;
@@ -174,15 +209,39 @@ public class ChartDataServer implements ChartDataApi {
         return result;
     }
 
+    /**
+     * 单位转换
+     * 根据配置的单位(千、万、百万、亿等)对数值进行除法运算
+     *
+     * @param value 原始数值
+     * @param formatter 格式化配置对象，包含单位信息
+     * @return 转换单位后的数值
+     */
     private static BigDecimal transUnit(BigDecimal value, FormatterCfgDTO formatter) {
         return value.divide(BigDecimal.valueOf(formatter.getUnit()));
     }
 
+    /**
+     * 小数位数格式化
+     * 根据配置的小数位数对数值进行格式化
+     *
+     * @param value 原始数值
+     * @param formatter 格式化配置对象，包含小数位数配置
+     * @return 格式化后的字符串，保留指定小数位数
+     */
     private static String transDecimal(BigDecimal value, FormatterCfgDTO formatter) {
         DecimalFormat df = new DecimalFormat("0." + new String(new char[formatter.getDecimalCount()]).replace('\0', '0'));
         return df.format(value);
     }
 
+    /**
+     * 千分位分隔符和后缀处理
+     * 为数值添加千分位分隔符，并根据单位添加中文后缀或自定义后缀
+     *
+     * @param value 数值字符串
+     * @param formatter 格式化配置对象，包含千分位分隔符、单位、后缀等配置
+     * @return 添加了千分位分隔符和后缀的字符串
+     */
     private static String transSeparatorAndSuffix(String value, FormatterCfgDTO formatter) {
         StringBuilder sb = new StringBuilder(value);
 
@@ -224,6 +283,14 @@ public class ChartDataServer implements ChartDataApi {
     }
 
 
+    /**
+     * 添加千分位分隔符
+     * 使用正则表达式为数字字符串添加千分位逗号分隔符
+     *
+     * @param numStr 数字字符串（整数部分）
+     * @param pattern 正则表达式模式，用于匹配每三位数字
+     * @return 添加了千分位分隔符的字符串
+     */
     private static String addThousandSeparator(String numStr, Pattern pattern) {
         Matcher matcher = pattern.matcher(numStr);
         StringBuffer sb = new StringBuffer();
@@ -235,6 +302,14 @@ public class ChartDataServer implements ChartDataApi {
     }
 
 
+    /**
+     * 导出图表详情
+     * 将图表数据导出为Excel文件，支持分页导出大数据量
+     *
+     * @param request Excel导出请求，包含图表信息、导出字段、分页参数等
+     * @param response HTTP响应对象
+     * @throws Exception 导出异常
+     */
     @DeLinkPermit("#p0.dvId")
     @Override
     public void innerExportDetails(ChartExcelRequest request, HttpServletResponse response) throws Exception {
@@ -347,16 +422,53 @@ public class ChartDataServer implements ChartDataApi {
     }
 
     @DeLinkPermit("#p0.dvId")
+    /**
+     * 导出数据集详情
+     * 将数据集的原始数据导出为Excel文件
+     *
+     * @param request Excel导出请求
+     * @param response HTTP响应对象
+     * @throws Exception 导出异常
+     */
     @Override
     public void innerExportDataSetDetails(ChartExcelRequest request, HttpServletResponse response) throws Exception {
         this.innerExportDetails(request, response);
     }
 
+    /**
+     * 设置Excel数据
+     * 将查询结果数据填充到Excel工作表中，支持表头分组、单元格合并等功能
+     * 重载方法，默认不添加批注
+     *
+     * @param detailsSheet Excel工作表对象
+     * @param cellStyle 单元格样式对象
+     * @param header 表头数组
+     * @param details 数据行列表
+     * @param detailFields 详情字段配置
+     * @param excelTypes Excel数据类型数组
+     * @param viewInfo 图表视图信息，包含格式化配置
+     * @param wb Excel工作簿对象
+     */
     public static void setExcelData(Sheet detailsSheet, CellStyle cellStyle, Object[] header, List<Object[]> details, ViewDetailField[] detailFields, Integer[] excelTypes, ChartViewDTO viewInfo, Workbook wb) {
         setExcelData(detailsSheet, cellStyle, header, details, detailFields, excelTypes, null, viewInfo, wb);
     }
 
 
+    /**
+     * 设置Excel数据（完整版）
+     * 将查询结果数据填充到Excel工作表中，支持表头分组、单元格合并、数据格式化等功能
+     * 适用于表格类型图表的导出
+     *
+     * @param detailsSheet Excel工作表对象
+     * @param cellStyle 单元格样式对象，包含字体、边框、背景等设置
+     * @param header 表头数组
+     * @param details 数据行列表，每行是一个Object数组
+     * @param detailFields 详情字段配置数组
+     * @param excelTypes Excel数据类型数组，用于区分文本和数值
+     * @param comment 单元格批注（可选）
+     * @param viewInfo 图表视图信息，包含格式化配置、表头分组配置等
+     * @param wb Excel工作簿对象
+     */
     public static void setExcelData(Sheet detailsSheet, CellStyle cellStyle, Object[] header, List<Object[]> details, ViewDetailField[] detailFields, Integer[] excelTypes, Comment comment, ChartViewDTO viewInfo, Workbook wb) {
         List<CellStyle> styles = new ArrayList<>();
         List<ChartViewFieldDTO> xAxis = new ArrayList<>();
@@ -570,6 +682,16 @@ public class ChartDataServer implements ChartDataApi {
         }
     }
 
+    /**
+     * 获取单元格合并配置
+     * 为表格的相同值单元格生成合并区域配置，用于纵向单元格合并
+     * 从第一列开始逐列处理，根据值的连续性确定合并范围
+     *
+     * @param data 数据列表，每行是一个Object数组
+     * @param colIndex 需要处理合并的最大列索引
+     * @param offsetHeight 行偏移量，用于处理表头占用多行的情况
+     * @return 单元格合并区域列表
+     */
     private static List<CellRangeAddress> getMergeConfig(List<Object[]> data, int colIndex, int offsetHeight) {
         var result = new ArrayList<CellRangeAddress>();
         var preRange = new ArrayList<Integer[]>();
@@ -615,6 +737,14 @@ public class ChartDataServer implements ChartDataApi {
         return result;
     }
 
+    /**
+     * 校验表头分组配置
+     * 验证表头分组配置的有效性，包括字段数量和字段顺序匹配
+     *
+     * @param header 表头对象，包含分组配置
+     * @param fields 图表字段列表
+     * @return 配置有效返回true，否则返回false
+     */
     private static boolean validateHeaderGroup(TableHeader header, List<ChartViewFieldDTO> fields) {
         if (header == null) {
             return false;
@@ -637,6 +767,13 @@ public class ChartDataServer implements ChartDataApi {
         return true;
     }
 
+    /**
+     * 获取表头叶子节点字段
+     * 递归获取表头分组配置中的所有叶子节点字段名
+     *
+     * @param columns 列配置列表
+     * @return 叶子节点字段名列表
+     */
     private static List<String> getHeaderLeafColumn(List<TableHeader.ColumnInfo> columns) {
         var result = new ArrayList<String>();
         for (TableHeader.ColumnInfo column : columns) {
@@ -649,6 +786,14 @@ public class ChartDataServer implements ChartDataApi {
         return result;
     }
 
+    /**
+     * 计算表头深度
+     * 递归计算表头分组的最大深度（层数）
+     *
+     * @param column 列信息对象
+     * @param parentDepth 父节点深度
+     * @return 该节点的最大深度
+     */
     private static Integer getDepth(TableHeader.ColumnInfo column, Integer parentDepth) {
         if (org.springframework.util.CollectionUtils.isEmpty(column.getChildren())) {
             return parentDepth;
@@ -661,6 +806,20 @@ public class ChartDataServer implements ChartDataApi {
         }
     }
 
+    /**
+     * 创建表头单元格
+     * 递归创建分组的表头单元格，处理单元格合并和样式设置
+     *
+     * @param tableHeader 表头配置对象
+     * @param column 当前列信息
+     * @param width 列的起始宽度位置
+     * @param depth 当前深度层级
+     * @param sheet Excel工作表对象
+     * @param cellStyle 单元格样式
+     * @param totaalDepth 表头总深度
+     * @param rowMap 行对象映射表
+     * @param xAxis 图表X轴字段列表，用于获取字段显示名称
+     */
     private static void createCell(TableHeader tableHeader, TableHeader.ColumnInfo column, Integer width, Integer depth, Sheet sheet, CellStyle cellStyle, Integer totaalDepth, Map<String, Row> rowMap, List<ChartViewFieldDTO> xAxis) {
         if (org.springframework.util.CollectionUtils.isEmpty(column.getChildren())) {
             Integer toDepth = totaalDepth - 1 > depth ? totaalDepth - 1 : depth;
@@ -700,6 +859,14 @@ public class ChartDataServer implements ChartDataApi {
         }
     }
 
+    /**
+     * 获取分组名称
+     * 根据字段key从表头元数据配置中获取对应的分组显示名称
+     *
+     * @param tableHeader 表头配置对象
+     * @param key 字段key
+     * @return 分组显示名称，未找到返回空字符串
+     */
     private static String getGroupName(TableHeader tableHeader, String key) {
         for (TableHeader.MetaInfo metaInfo : tableHeader.getHeaderGroupConfig().getMeta()) {
             if (metaInfo.getField().equals(key)) {
@@ -709,6 +876,15 @@ public class ChartDataServer implements ChartDataApi {
         return "";
     }
 
+    /**
+     * 获取DataEase字段显示名称
+     * 根据字段dataeaseName获取字段在图表中的显示名称
+     * 优先使用chartShowName，如果为空则使用name
+     *
+     * @param xAxis 图表字段列表
+     * @param key 字段的dataeaseName
+     * @return 字段显示名称，未找到返回空字符串
+     */
     private static String getDeFieldName(List<ChartViewFieldDTO> xAxis, String key) {
         for (ChartViewFieldDTO xAxi : xAxis) {
             if (xAxi.getDataeaseName().equals(key)) {
@@ -718,6 +894,15 @@ public class ChartDataServer implements ChartDataApi {
         return "";
     }
 
+    /**
+     * 设置列宽度
+     * 递归计算并设置表头分组的列宽度
+     * 叶子节点的宽度为1，非叶子节点的宽度为所有子节点宽度之和
+     *
+     * @param column 列信息对象
+     * @param parentWidth 父节点的宽度
+     * @return 该列的宽度
+     */
     private static Integer setWidth(TableHeader.ColumnInfo column, Integer parentWidth) {
         if (org.springframework.util.CollectionUtils.isEmpty(column.getChildren())) {
             column.setWidth(parentWidth);
@@ -732,6 +917,14 @@ public class ChartDataServer implements ChartDataApi {
         }
     }
 
+    /**
+     * 单元格数值转换
+     * 根据格式化配置转换数值，百分比类型不进行单位转换，其他类型进行单位转换
+     *
+     * @param formatterCfgDTO 格式化配置对象
+     * @param value 原始数值
+     * @return 转换后的数值字符串
+     */
     private static String cellValue(FormatterCfgDTO formatterCfgDTO, BigDecimal value) {
         if (formatterCfgDTO.getType().equalsIgnoreCase("percent")) {
             return value.toString();
@@ -740,6 +933,15 @@ public class ChartDataServer implements ChartDataApi {
         }
     }
 
+    /**
+     * 创建单元格样式
+     * 根据格式化配置创建Excel单元格样式，支持自动、数值、百分比三种类型格式化
+     *
+     * @param workbook Excel工作簿对象
+     * @param formatter 格式化配置对象
+     * @param value 单元格值（用于自动类型判断小数位数）
+     * @return 单元格样式对象
+     */
     private static CellStyle createCellStyle(Workbook workbook, FormatterCfgDTO formatter, String value) {
         CellStyle cellStyle = workbook.createCellStyle();
         DataFormat format = workbook.createDataFormat();
@@ -837,21 +1039,52 @@ public class ChartDataServer implements ChartDataApi {
         return cellStyle;
     }
 
+    /**
+     * 获取字段数据
+     * 查询指定字段的所有不重复值，用于筛选组件
+     *
+     * @param view 图表视图信息
+     * @param fieldId 字段ID
+     * @param fieldType 字段类型（dimension/quota）
+     * @return 字段值列表
+     * @throws Exception 查询异常
+     */
     @Override
     public List<String> getFieldData(ChartViewDTO view, Long fieldId, String fieldType) throws Exception {
         return chartDataManage.getFieldData(view, fieldId, fieldType);
     }
 
+    /**
+     * 获取钻取字段数据
+     * 获取字段用于钻取分析的数据值
+     *
+     * @param view 图表视图信息
+     * @param fieldId 字段ID
+     * @return 钻取字段值列表
+     * @throws Exception 查询异常
+     */
     @Override
     public List<String> getDrillFieldData(ChartViewDTO view, Long fieldId) throws Exception {
         return chartDataManage.getDrillFieldData(view, fieldId);
     }
 
     @DeLog(id = "#p0", ot = LogOT.EXPORT, st = LogST.PANEL)
+    /**
+     * 导出仪表板视图日志
+     * 记录仪表板视图的导出操作日志
+     *
+     * @param id 视图ID
+     */
     public void exportPanelViewLog(Long id) {
     }
 
     @DeLog(id = "#p0", ot = LogOT.EXPORT, st = LogST.SCREEN)
+    /**
+     * 导出大屏视图日志
+     * 记录大屏视图的导出操作日志
+     *
+     * @param id 视图ID
+     */
     public void exportScreenViewLog(Long id) {
     }
 

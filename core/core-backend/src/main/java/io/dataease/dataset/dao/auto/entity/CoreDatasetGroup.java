@@ -4,9 +4,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 数据集分组表
- * </p>
+ * 数据集分组实体类
+ * 对应数据库表 core_dataset_group，用于管理数据集的层次结构和分组信息
+ * 支持文件夹(folder)和数据集(dataset)两种节点类型
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>数据集的层次化组织管理</li>
+ *   <li>支持多种数据连接模式(直连/同步)</li>
+ *   <li>数据集同步状态跟踪</li>
+ *   <li>跨数据源关联支持</li>
+ * </ul>
  *
  * @author fit2cloud
  * @since 2025-04-14

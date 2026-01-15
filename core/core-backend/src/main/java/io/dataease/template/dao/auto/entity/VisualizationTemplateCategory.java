@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
 /**
- * <p>
- * 模板表
- * </p>
+ * 可视化模板分类实体类
+ * 用于存储模板分类的层级结构信息
  *
  * @author fit2cloud
  * @since 2023-12-04
@@ -61,6 +60,9 @@ public class VisualizationTemplateCategory implements Serializable {
      */
     private String snapshot;
 
+    /**
+     * 模板类型 system 系统内置 self 用户自建
+     */
     private String templateType;
 
     public String getId() {

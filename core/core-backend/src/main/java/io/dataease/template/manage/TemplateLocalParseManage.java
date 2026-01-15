@@ -21,8 +21,11 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 /**
- * @author : WangJiaHao
- * @date : 2024/5/7
+ * 模板本地解析管理类
+ * 负责初始化和解析本地模板文件
+ *
+ * @author WangJiaHao
+ * @date 2024/5/7
  */
 @Service
 public class TemplateLocalParseManage {
@@ -36,52 +39,85 @@ public class TemplateLocalParseManage {
     @Resource(type = ResourceLoader.class)
     private ResourceLoader resourceLoader;
 
+    /**
+     * 初始化模板
+     * 扫描并加载classpath下template目录中的所有模板文件
+     *
+     * @throws Exception 初始化异常
+     */
     public void doInit() throws Exception {
+        // 获取template目录下的所有模板文件
         org.springframework.core.io.Resource[] templateFiles = getAllFilesInResourceDirectory("template");
         if (templateFiles != null && templateFiles.length > 0) {
             for (int i = 0; i < templateFiles.length; i++) {
                 org.springframework.core.io.Resource templateFile = templateFiles[i];
                 String templateName = templateFile.getFilename();
+                // 检查模板是否已存在
                 QueryWrapper<DeTemplateVersion> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("script", templateName);
                 if (!deTemplateVersionMapper.exists(queryWrapper)) {
                     DeTemplateVersion version = new DeTemplateVersion();
                     version.setScript(templateName);
                     version.setInstalledOn(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+                    // 解析模板文件
                     try {
-                        String content = new String(templateFile.getInputStream().readAllBytes());;
+                        String content = new String(templateFile.getInputStream().readAllBytes());
+                        ;
                         DataVisualizationBaseRequest template = JsonUtil.parseObject(content, DataVisualizationBaseRequest.class);
+                        // 解析核心内容
                         parseCore(template);
                         version.setSuccess(true);
                         deTemplateVersionMapper.insert(version);
                     } catch (Exception e) {
+                        // 解析失败,记录失败状态
+                        LogUtil.error("De Template Version Error : " + templateName);
                         LogUtil.error("De Template Version Error : " + templateName);
                         version.setSuccess(false);
                         deTemplateVersionMapper.insert(version);
                         break;
                     }
                 }
-
             }
+
         }
     }
 
+    /**
+     * 解析模板核心内容
+     * 提取并保存模板中的静态资源
+     *
+     * @param template 数据可视化基础请求
+     */
     public void parseCore(DataVisualizationBaseRequest template) {
-        // 解析静态文件并保存
+        // 保存静态资源到服务器
         staticResourceServer.saveFilesToServe(template.getStaticResource());
     }
 
 
+    /**
+     * 获取资源目录下的所有文件
+     *
+     * @param directoryName 目录名称
+     * @return 资源文件数组
+     * @throws Exception 获取文件异常
+     */
     public org.springframework.core.io.Resource[] getAllFilesInResourceDirectory(String directoryName) throws Exception {
-        // 创建一个 PathMatchingResourcePatternResolver 对象
+        // 创建资源解析器
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(resourceLoader);
 
-        // 获取 classpath 下 template 目录下所有文件的 Resource 数组
+        // 获取classpath下template目录中的所有文件
         org.springframework.core.io.Resource[] resources = resolver.getResources("classpath:template/*");
 
         return resources;
     }
 
+    /**
+     * 读取文件内容
+     *
+     * @param file 文件对象
+     * @return 文件内容字符串
+     * @throws IOException 读取异常
+     */
     public static String readFileContent(File file) throws IOException {
         StringBuilder content = new StringBuilder();
         try (InputStream inputStream = Files.newInputStream(file.toPath());

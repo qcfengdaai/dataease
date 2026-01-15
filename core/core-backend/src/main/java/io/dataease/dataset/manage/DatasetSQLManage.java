@@ -52,7 +52,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 数据集SQL管理类
+ * 负责数据集SQL的生成、解析、变量替换等核心逻辑
+ * 支持单表、SQL、联合查询等多种数据集类型的SQL处理
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>联合SQL的生成和优化</li>
+ *   <li>SQL参数的解析和替换</li>
+ *   <li>跨数据源SQL的处理</li>
+ *   <li>数据源Schema别名管理</li>
+ *   <li>SQL变量处理</li>
+ *   <li>权限过滤集成</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 public class DatasetSQLManage {

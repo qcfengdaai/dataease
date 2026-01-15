@@ -18,11 +18,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 折线图处理器
+ * 负责折线图、面积图及其变体的数据处理和渲染
+ * 继承YoyChartHandler支持同比环比计算
+ *
+ * <p>支持的图表类型：</p>
+ * <ul>
+ *   <li>基础折线图 (line)</li>
+ *   <li>面积图 (line-area)</li>
+ *   <li>堆叠面积图 (line-stack)</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @Component
 public class LineHandler extends YoyChartHandler {
     @Getter
     private String type = "line";
 
+    /**
+     * 格式化坐标轴
+     * 处理折线图的坐标轴配置，包括X轴扩展字段和扩展标签、提示字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含X轴扩展、扩展标签和提示字段
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);
@@ -37,6 +58,16 @@ public class LineHandler extends YoyChartHandler {
         return result;
     }
 
+    /**
+     * 构建标准图表结果
+     * 将查询数据转换为折线图可用的数据格式
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param data 查询返回的原始数据
+     * @return 格式化后的折线图数据
+     */
     @Override
     public Map<String, Object> buildNormalResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, List<String[]> data) {
         boolean isDrill = filterResult
@@ -51,6 +82,18 @@ public class LineHandler extends YoyChartHandler {
         return ChartDataBuild.transBaseGroupDataAntV(xAxisBase, xAxis, xAxisExt, yAxis, view, data, isDrill);
     }
 
+    /**
+     * 计算图表数据结果
+     * 执行折线图的数据计算，包括辅助线、辅助字段等特殊处理
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param sqlMap SQL相关映射（包含数据源信息）
+     * @param sqlMeta SQL元数据对象
+     * @param provider 数据源提供者
+     * @return 图表计算结果，包含辅助线数据
+     */
     @Override
     public <T extends ChartCalcDataResult> T calcChartResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, Map<String, Object> sqlMap, SQLMeta sqlMeta, Provider provider) {
         var dsMap = (Map<Long, DatasourceSchemaDTO>) sqlMap.get("dsMap");

@@ -48,7 +48,30 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @Author Junjun
+ * 图表数据管理类
+ * 负责图表数据的计算、生成和转换，是图表模块的核心业务逻辑处理类
+ * 协调数据集、SQL引擎、权限控制、图表处理器等多个模块完成图表数据渲染
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>图表数据计算和生成（calcData）</li>
+ *   <li>SQL构建和执行</li>
+ *   <li>数据权限过滤（行权限和列权限）</li>
+ *   <li>数据脱敏处理</li>
+ *   <li>同比环比计算</li>
+ *   <li>图表插件集成</li>
+ *   <li>跨数据源查询支持</li>
+ * </ul>
+ *
+ * <p>使用场景：</p>
+ * <ul>
+ *   <li>仪表板图表数据加载</li>
+ *   <li>图表编辑器预览</li>
+ *   <li>Excel数据导出</li>
+ *   <li>大屏数据展示</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 @Component
 public class ChartDataManage {
@@ -76,6 +99,14 @@ public class ChartDataManage {
 
     private static final Logger logger = LoggerFactory.getLogger(ChartDataManage.class);
 
+    /**
+     * 计算图表数据
+     * 图表数据计算的核心方法，协调图表处理器完成数据处理和格式化
+     *
+     * @param view 图表视图信息，包含图表类型、字段配置、过滤条件等
+     * @return 计算后的图表视图，包含数据、字段、样式等信息
+     * @throws Exception 数据计算异常
+     */
     public ChartViewDTO calcData(ChartViewDTO view) throws Exception {
         ChartExtRequest chartExtRequest = view.getChartExtRequest();
         if (chartExtRequest == null) {
@@ -422,6 +453,14 @@ public class ChartDataManage {
         return chartHandler.buildChart(view, calcResult, formatResult, filterResult);
     }
 
+    /**
+     * 获取图表动态大小字段
+     * 从图表配置中提取仪表盘最小值、最大值和水球图最大值等动态字段配置
+     *
+     * @param view 图表视图信息
+     * @return 动态字段列表
+     * @throws Exception 字段获取异常
+     */
     private List<ChartViewFieldDTO> getSizeField(ChartViewDTO view) throws Exception {
         List<ChartViewFieldDTO> list = new ArrayList<>();
         Map<String, Object> customAttr = view.getCustomAttr();
@@ -444,6 +483,15 @@ public class ChartDataManage {
         return list;
     }
 
+    /**
+     * 获取动态字段
+     * 根据配置的类型和字段key获取动态字段信息，用于仪表盘等图表的动态极值配置
+     *
+     * @param sizeObj 图表大小配置对象
+     * @param type 配置类型（如gaugeMinType、gaugeMaxType等）
+     * @param field 字段key（如gaugeMinField、gaugeMaxField等）
+     * @return 动态字段对象，如果不是动态类型则返回null
+     */
     private ChartViewFieldDTO getDynamicField(Map<String, Object> sizeObj, String type, String field) {
         String maxType = (String) sizeObj.get(type);
         if (StringUtils.equalsIgnoreCase("dynamic", maxType)) {
@@ -468,12 +516,27 @@ public class ChartDataManage {
         return null;
     }
 
+    /**
+     * 创建空的图表视图DTO
+     * 克隆一个图表视图对象，用于返回空数据场景
+     *
+     * @param view 原始图表视图对象
+     * @return 克隆的空图表视图对象
+     */
     private ChartViewDTO emptyChartViewDTO(ChartViewDTO view) {
         ChartViewDTO dto = new ChartViewDTO();
         BeanUtils.copyBean(dto, view);
         return dto;
     }
 
+    /**
+     * 获取钻取字段的排序方式
+     * 从X轴字段列表中查找指定字段的排序配置
+     *
+     * @param xAxis X轴字段列表
+     * @param field 要查找的字段
+     * @return 排序方式（asc/desc），未找到返回空字符串
+     */
     private String getDrillSort(List<ChartViewFieldDTO> xAxis, ChartViewFieldDTO field) {
         String res = "";
         for (ChartViewFieldDTO f : xAxis) {
@@ -487,6 +550,13 @@ public class ChartDataManage {
         return res;
     }
 
+    /**
+     * 字段类型转换
+     * 将图表视图字段转换为数据集表字段DTO
+     *
+     * @param list 图表视图字段列表
+     * @return 数据集表字段DTO列表
+     */
     private List<DatasetTableFieldDTO> transFields(List<? extends ChartViewFieldBaseDTO> list) {
         return list.stream().map(ele -> {
             DatasetTableFieldDTO dto = new DatasetTableFieldDTO();
@@ -496,6 +566,14 @@ public class ChartDataManage {
     }
 
     // 对结果排序
+    /**
+     * 结果自定义排序
+     * 根据X轴字段对数据进行自定义排序
+     *
+     * @param xAxis X轴字段列表
+     * @param data 原始数据
+     * @return 排序后的数据
+     */
     public List<String[]> resultCustomSort(List<ChartViewFieldDTO> xAxis, List<String[]> data) {
         List<String[]> res = new ArrayList<>(data);
         if (xAxis.size() > 0) {
@@ -537,6 +615,15 @@ public class ChartDataManage {
         return res;
     }
 
+    /**
+     * 自定义排序
+     * 按照指定的自定义顺序对数据进行排序
+     *
+     * @param custom 自定义排序的值列表
+     * @param data 原始数据
+     * @param index 排序依据的列索引
+     * @return 排序后的数据
+     */
     public List<String[]> customSort(List<String> custom, List<String[]> data, int index) {
         List<String[]> res = new ArrayList<>();
 
@@ -573,6 +660,16 @@ public class ChartDataManage {
         return res;
     }
 
+    /**
+     * 获取字段数据
+     * 查询指定字段的所有不重复值，用于筛选组件
+     *
+     * @param view 图表视图信息
+     * @param fieldId 字段ID
+     * @param fieldType 字段类型（dimension/quota）
+     * @return 字段值列表
+     * @throws Exception 查询异常
+     */
     public List<String> getFieldData(ChartViewDTO view, Long fieldId, String fieldType) throws Exception {
         ChartExtRequest requestList = view.getChartExtRequest();
         List<String[]> sqlData = sqlData(view, requestList, fieldId);
@@ -629,6 +726,16 @@ public class ChartDataManage {
         return res.stream().distinct().collect(Collectors.toList());
     }
 
+    /**
+     * 执行SQL查询获取字段数据
+     * 通过SQL查询获取字段的枚举值
+     *
+     * @param view 图表视图信息
+     * @param requestList 扩展请求参数
+     * @param fieldId 字段ID
+     * @return 查询结果数据
+     * @throws Exception SQL执行异常
+     */
     public List<String[]> sqlData(ChartViewDTO view, ChartExtRequest requestList, Long fieldId) throws Exception {
         if (ObjectUtils.isEmpty(view)) {
             DEException.throwException(Translator.get("i18n_chart_delete"));
@@ -788,6 +895,13 @@ public class ChartDataManage {
         return data;
     }
 
+    /**
+     * 获取图表所有字段
+     * 查询数据集的所有维度和度量字段，合并后返回
+     *
+     * @param view 图表视图信息
+     * @return 所有可用字段的列表
+     */
     private List<ChartViewFieldDTO> getAllChartFields(ChartViewDTO view) {
         // get all fields
         Map<String, List<ChartViewFieldDTO>> stringListMap = chartViewManege.listByDQ(view.getTableId(), view.getId(), view);
@@ -799,6 +913,14 @@ public class ChartDataManage {
         return allFields.stream().filter(ele -> ele.getId() != -1L).collect(Collectors.toList());
     }
 
+    /**
+     * 从可视化保存图表视图
+     * 批量保存仪表板中的图表视图
+     *
+     * @param checkData 校验数据
+     * @param sceneId 场景ID（仪表板ID）
+     * @param chartViewsInfo 图表视图信息Map
+     */
     public void saveChartViewFromVisualization(String checkData, Long sceneId, Map<Long, ChartViewDTO> chartViewsInfo) {
         if (!MapUtils.isEmpty(chartViewsInfo)) {
             List<Long> disuseChartIdList = new ArrayList<>();
@@ -821,6 +943,15 @@ public class ChartDataManage {
         }
     }
 
+    /**
+     * 获取钻取字段数据
+     * 获取字段用于钻取分析的数据值
+     *
+     * @param view 图表视图信息
+     * @param fieldId 字段ID
+     * @return 钻取字段值列表
+     * @throws Exception 查询异常
+     */
     public List<String> getDrillFieldData(ChartViewDTO view, Long fieldId) throws Exception {
         List<ChartViewFieldDTO> drillField = view.getDrillFields();
         ChartViewFieldDTO targetField = null;
@@ -841,6 +972,12 @@ public class ChartDataManage {
         return result.stream().map(i -> i[0]).distinct().collect(Collectors.toList());
     }
 
+    /**
+     * 编码图表数据
+     * 对敏感字段和计算字段进行编码处理
+     *
+     * @param chartViewDTO 图表视图DTO
+     */
     public void encodeData(ChartViewDTO chartViewDTO) {
         if (chartViewDTO.getData() != null) {
             if (chartViewDTO.getType().startsWith("chart-mix")) {

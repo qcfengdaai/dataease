@@ -17,6 +17,13 @@ public class LiquidHandler extends NumericalChartHandler {
     @Getter
     private String type = "liquid";
 
+    /**
+     * 格式化坐标轴
+     * 处理水波图的坐标轴配置，包括动态的最大值字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果，包含动态字段配置
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var axisMap = new HashMap<ChartAxis, List<ChartViewFieldDTO>>();

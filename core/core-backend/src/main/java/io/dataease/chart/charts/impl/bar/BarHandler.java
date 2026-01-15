@@ -17,15 +17,41 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 柱状图处理器
+ * 负责柱状图、水平柱状图及其变体的数据处理和渲染
+ * 继承YoyChartHandler支持同比环比计算
+ *
+ * <p>支持的图表类型：</p>
+ * <ul>
+ *   <li>基础柱状图 (bar)</li>
+ *   <li>水平柱状图 (bar-horizontal)</li>
+ *   <li>堆叠柱状图 (bar-stack)</li>
+ *   <li>分组柱状图 (bar-group)</li>
+ *   <li>进度条、子弹图、范围条图等变体</li>
+ * </ul>
+ *
+ * @author DataEase Team
+ */
 @Component
 public class BarHandler extends YoyChartHandler {
 
+    /**
+     * 初始化处理器
+     * 注册柱状图和水平柱状图的处理器
+     */
     @Override
     public void init() {
         chartHandlerManager.registerChartHandler(this.getRender(), "bar", this);
         chartHandlerManager.registerChartHandler(this.getRender(), "bar-horizontal", this);
     }
-
+    /**
+     * 格式化坐标轴
+     * 处理柱状图的坐标轴配置，包括扩展标签和提示字段
+     *
+     * @param view 图表视图信息
+     * @return 坐标轴格式化结果
+     */
     @Override
     public AxisFormatResult formatAxis(ChartViewDTO view) {
         var result = super.formatAxis(view);
@@ -36,7 +62,18 @@ public class BarHandler extends YoyChartHandler {
         result.getAxisMap().put(ChartAxis.extTooltip, view.getExtTooltip());
         return result;
     }
-
+    /**
+     * 计算图表数据结果
+     * 执行柱状图的数据计算，包括辅助线、辅助字段等特殊处理
+     *
+     * @param view 图表视图信息
+     * @param formatResult 坐标轴格式化结果
+     * @param filterResult 过滤器结果
+     * @param sqlMap SQL相关映射（包含数据源信息）
+     * @param sqlMeta SQL元数据对象
+     * @param provider 数据源提供者
+     * @return 图表计算结果
+     */
     @Override
     public <T extends ChartCalcDataResult> T calcChartResult(ChartViewDTO view, AxisFormatResult formatResult, CustomFilterResult filterResult, Map<String, Object> sqlMap, SQLMeta sqlMeta, Provider provider) {
         var dsMap = (Map<Long, DatasourceSchemaDTO>) sqlMap.get("dsMap");

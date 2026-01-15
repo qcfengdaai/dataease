@@ -17,21 +17,54 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * @Author Junjun
- * <p>
- * 将SQLMeta各个部分先构建完毕，然后在这个类中拼接
+ * SQL构建提供者
+ * 负责将SQLMeta对象转换为完整的SQL查询语句，支持多种查询模式和数据库方言
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *   <li>根据SQLMeta构建完整的查询SQL</li>
+ *   <li>支持聚合查询和普通查询</li>
+ *   <li>支持排序、分页、去重等功能</li>
+ *   <li>使用StringTemplate进行SQL模板化构建</li>
+ * </ul>
+ *
+ * <p>设计模式：</p>
+ * <ul>
+ *   <li>将SQLMeta各个部分先构建完毕，然后在这个类中进行SQL拼接</li>
+ *   <li>使用模板引擎确保SQL语法的正确性</li>
+ *   <li>支持不同数据库的SQL方言差异</li>
+ * </ul>
+ *
+ * @author Junjun
  */
 public class SQLProvider {
 
     /**
-     * @param sqlMeta sql作为table，首尾用'(',')'
-     * @param isGroup 是否聚合
-     * @return
+     * 创建临时查询SQL
+     * 将SQLMeta转换为可作为子查询使用的SQL语句，首尾用括号包围
+     *
+     * @param sqlMeta SQL元数据对象，包含查询的各个组成部分
+     * @param isGroup 是否进行聚合查询
+     * @param needOrder 是否需要排序
+     * @param distinct 是否去重
+     * @return 构建好的SQL查询语句
      */
     public static String createQuerySQLAsTmp(SQLMeta sqlMeta, boolean isGroup, boolean needOrder, boolean distinct) {
         return createQuerySQL(sqlMeta, isGroup, needOrder, distinct);
     }
 
+    /**
+     * 创建带分页的查询SQL
+     * 在基础查询SQL后添加LIMIT和OFFSET子句实现分页功能
+     *
+     * @param sqlMeta SQL元数据对象
+     * @param isGroup 是否进行聚合查询
+     * @param needOrder 是否需要排序
+     * @param distinct 是否去重
+     * @param start 分页起始位置（偏移量）
+     * @param count 每页记录数
+     * @return 包含分页功能的SQL查询语句
+     */
     public static String createQuerySQLWithLimit(SQLMeta sqlMeta, boolean isGroup, boolean needOrder, boolean distinct, int start, int count) {
         return createQuerySQL(sqlMeta, isGroup, needOrder, distinct) + " LIMIT " + count + " OFFSET " + start;
     }
