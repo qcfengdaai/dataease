@@ -1,3 +1,14 @@
+/**
+ * 属性配置常量
+ * 定义组件属性的各种配置选项和映射关系
+ */
+
+// ==================== 位置属性配置 ====================
+
+/**
+ * 位置属性配置数组
+ * 定义了组件位置和尺寸的可编辑属性
+ */
 export const positionData = [
   { key: 'left', label: 'X', min: -1000, max: 20000, step: 1 },
   { key: 'width', label: 'W', min: 2, max: 20000, step: 1 },
@@ -5,12 +16,22 @@ export const positionData = [
   { key: 'height', label: 'H', min: 2, max: 20000, step: 1 }
 ]
 
+/**
+ * 多维位置属性配置数组
+ * 定义了 3D 空间中的旋转属性
+ */
 export const multiDimensionalData = [
   { key: 'x', label: 'X', min: -360, max: 360, step: 1 },
   { key: 'y', label: 'W', min: -360, max: 360, step: 1 },
   { key: 'z', label: 'Y', min: -360, max: 360, step: 1 }
 ]
 
+// ==================== 样式属性配置 ====================
+
+/**
+ * 样式属性配置数组
+ * 定义了组件样式的可编辑属性
+ */
 export const styleData = [
   { key: 'lineHeight', label: '行高', min: 0, max: 50, step: 1 },
   { key: 'opacity', label: '不透明度', min: 0, max: 1, step: 0.1 },
@@ -33,6 +54,10 @@ export const styleData = [
   { key: 'backgroundColor', label: '背景色' }
 ]
 
+/**
+ * 样式属性中文映射表
+ * 将样式属性键名映射到中文标签
+ */
 export const styleMap = {
   left: 'x 坐标',
   top: 'y 坐标',
@@ -54,6 +79,11 @@ export const styleMap = {
   opacity: '不透明度'
 }
 
+// ==================== 选项配置 ====================
+
+/**
+ * 文本对齐选项
+ */
 export const textAlignOptions = [
   {
     label: '左对齐',
@@ -69,6 +99,9 @@ export const textAlignOptions = [
   }
 ]
 
+/**
+ * 边框风格选项
+ */
 export const borderStyleOptions = [
   {
     label: '实线',
@@ -80,6 +113,9 @@ export const borderStyleOptions = [
   }
 ]
 
+/**
+ * 垂直对齐选项
+ */
 export const verticalAlignOptions = [
   {
     label: '上对齐',
@@ -95,11 +131,28 @@ export const verticalAlignOptions = [
   }
 ]
 
+/**
+ * 下拉选择类型的属性列表
+ * 这些属性使用选项列表而不是数值输入
+ */
 export const selectKey = ['textAlign', 'borderStyle', 'verticalAlign']
 
+/**
+ * 水平位置属性列表
+ */
 export const horizontalPosition = ['headHorizontalPosition']
 
+// ==================== 字段类型配置 ====================
+
+/**
+ * 字段类型代码列表
+ */
 export const fieldType = ['text', 'time', 'value', 'value', 'value', 'location', 'binary', 'url']
+
+/**
+ * 字段类型中文标签列表
+ * 与 fieldType 数组一一对应
+ */
 export const fieldTypeText = [
   '文本',
   '时间',
@@ -111,6 +164,10 @@ export const fieldTypeText = [
   'URL'
 ]
 
+/**
+ * 选项映射表
+ * 将属性键名映射到对应的选项列表
+ */
 export const optionMap = {
   textAlign: textAlignOptions,
   borderStyle: borderStyleOptions,

@@ -1,3 +1,58 @@
+<!--
+/**
+ * Cron 表达式生成器组件
+ *
+ * ==================== 组件概述 ====================
+ * 用于生成和编辑 Cron 表达式的可视化组件，支持：
+ * 1. 通过图形界面生成 Cron 表达式
+ * 2. 支持秒、分、时、日、月、周、年的配置
+ * 3. 实时预览生成的 Cron 表达式
+ * 4. 表达式解析和回显
+ *
+ * ==================== Cron 表达式格式 ====================
+ * 标准格式：秒 分 时 日 月 周 年
+ * 示例：0 0 12 * * ? - 每天中午12点执行
+ *
+ * 各字段说明：
+ * - 秒: 0-59 , - * /
+ * - 分: 0-59 , - * /
+ * - 时: 0-23 , - * /
+ * - 日: 1-31 , - * ? / L W
+ * - 月: 1-12 , - * /
+ * - 周: 1-7 , - * ? / L #
+ * - 年: 1970-2099 , - * /
+ *
+ * ==================== Props 参数 ====================
+ * @param {String} modelValue - Cron 表达式值，支持 v-model
+ * @param {Boolean} isRate - 是否实时响应外部变化，默认 false
+ *
+ * ==================== Events 事件 ====================
+ * @event update:modelValue - Cron 表达式变化时触发
+ *
+ * ==================== 使用示例 ====================
+ * <template>
+ *   <Cron v-model="cronExpression" />
+ *
+ *   <div>当前 Cron: {{ cronExpression }}</div>
+ * </template>
+ *
+ * <script setup>
+ * import { ref } from 'vue'
+ * import Cron from '@/components/cron/src/Cron.vue'
+ *
+ * const cronExpression = ref('0 0 12 * * ?')
+ * </script>
+ *
+ * ==================== 常用 Cron 表达式示例 ====================
+ * - 0 0 12 * * ?     - 每天中午12点
+ * - 0 0 0 * * ?      - 每天凌晨
+ * - 0 0/5 * * * ?    - 每5分钟
+ * - 0 0 9-17 * * ?    - 每天9点到17点
+ * - 0 0 0 1 * ?       - 每月1号凌晨
+ * - 0 0 0 ? * MON     - 每周一凌晨
+ * - 0 0,30 12,15 * * ? - 每天12点和15点的整点和30分
+ */
+-->
 <script lang="ts" setup>
 import { reactive, computed, watch, onBeforeMount } from 'vue'
 import { propTypes } from '@/utils/propTypes'

@@ -1,3 +1,15 @@
+/**
+ * 画布工具函数
+ * 提供画布和组件的初始化、保存、样式处理等功能
+ *
+ * 主要功能：
+ * - 组件初始化和查找
+ * - 画布数据初始化和保存
+ * - 组件样式适配和主题切换
+ * - 组件位置和尺寸计算
+ * - 联动和跳转信息处理
+ */
+
 import { cloneDeep } from 'lodash-es'
 import componentList, {
   ACTION_SELECTION,
@@ -50,6 +62,15 @@ import { formatterItem } from '@/views/chart/components/js/formatter'
 const { t } = useI18n()
 const appearanceStore = useAppearanceStoreWithOut()
 const { wsCache } = useCache()
+
+// ==================== 组件转换相关 ====================
+
+/**
+ * 图表数据字符串转对象
+ * @param targetIn - 输入的目标对象
+ * @param copy - 是否为复制模式
+ * @returns 转换后的对象
+ */
 export function chartTransStr2Object(targetIn, copy) {
   const target = copy === 'Y' ? cloneDeep(targetIn) : targetIn
   return target
@@ -80,6 +101,11 @@ export function chartTransObject2Str(targetIn, copy) {
   return target
 }
 
+/**
+ * 查找拖拽组件
+ * @param componentInfo - 组件信息字符串（格式：组件名&内部类型）
+ * @returns 新组件对象
+ */
 export function findDragComponent(componentInfo) {
   const componentInfoArray = componentInfo.split('&')
   const componentName = componentInfoArray[0]
@@ -87,6 +113,15 @@ export function findDragComponent(componentInfo) {
   return findNewComponent(componentName, innerType)
 }
 
+/**
+ * 查找新组件
+ * @param componentName - 组件名称
+ * @param innerType - 内部类型
+ * @param staticMap - 静态映射（可选）
+ * @returns 新组件对象
+ *
+ * 从组件列表中查找指定组件并进行初始化配置
+ */
 export function findNewComponent(componentName, innerType, staticMap?) {
   let newComponent
   componentList.forEach(comp => {
@@ -125,6 +160,13 @@ export function findNewComponent(componentName, innerType, staticMap?) {
   return newComponent
 }
 
+/**
+ * 通用拖拽开始处理
+ * @param e - 事件对象
+ * @param dvModel - 数据可视化模式（'dashboard' 或 'dataV'）
+ *
+ * 处理组件拖拽开始事件，根据模式选择不同的传输方式
+ */
 export function commonHandleDragStart(e, dvModel) {
   const componentInfo = e.target.dataset.id
   if (dvModel === 'dashboard') {
@@ -135,6 +177,14 @@ export function commonHandleDragStart(e, dvModel) {
     e.dataTransfer.setData('id', componentInfo)
   }
 }
+
+/**
+ * 通用拖拽结束处理
+ * @param e - 事件对象
+ * @param dvModel - 数据可视化模式（'dashboard' 或 'dataV'）
+ *
+ * 处理组件拖拽结束事件，清理未移入的组件
+ */
 export function commonHandleDragEnd(e, dvModel) {
   if (dvModel === 'dashboard') {
     // 仪表板结束消息传输方式(用来清理未移入的组件)
@@ -142,6 +192,11 @@ export function commonHandleDragEnd(e, dvModel) {
   }
 }
 
+/**
+ * 判断是否为数字
+ * @param value - 待判断的值
+ * @returns 是否为有效数字
+ */
 function isNumber(value) {
   return !isNaN(value) && typeof value === 'number'
 }
@@ -599,6 +654,12 @@ export function initCanvasDataMobile(dvId, params, callBack) {
   )
 }
 
+/**
+ * 检查画布变更前的处理
+ * @param callBack - 回调函数
+ *
+ * 检查画布是否有变更冲突，非桌面版在保存前会检查
+ */
 export function checkCanvasChangePre(callBack) {
   // do pre
   const isUpdate = curDvInfo.value.id && curDvInfo.value.optType !== 'copy'
@@ -628,10 +689,23 @@ export function checkCanvasChangePre(callBack) {
   }
 }
 
+/**
+ * 保存画布
+ * @param callBack - 回调函数
+ *
+ * 保存当前画布数据到服务器
+ */
 export async function canvasSave(callBack) {
   await canvasSaveWithParams(null, callBack)
 }
 
+/**
+ * 带参数保存画布
+ * @param params - 保存参数
+ * @param callBack - 回调函数
+ *
+ * 保存当前画布数据到服务器，支持传入额外参数
+ */
 export async function canvasSaveWithParams(params, callBack) {
   dvMainStore.removeGroupArea()
   const componentDataToSave = cloneDeep(componentData.value)
@@ -700,6 +774,13 @@ export async function canvasSaveWithParams(params, callBack) {
   })
 }
 
+/**
+ * 检查并添加 HTTP 协议
+ * @param url - 待检查的 URL
+ * @returns 处理后的 URL
+ *
+ * 如果 URL 缺少协议前缀，自动添加 http://
+ */
 export function checkAddHttp(url) {
   if (!url) {
     return url
@@ -710,6 +791,16 @@ export function checkAddHttp(url) {
   }
 }
 
+/**
+ * 设置 ID 值转换
+ * @param from - 源字段
+ * @param to - 目标字段
+ * @param content - 内容字符串
+ * @param colList - 列表数组
+ * @returns 转换后的内容
+ *
+ * 将内容中的名称根据映射表转换为 ID
+ */
 export function setIdValueTrans(from, to, content, colList) {
   if (!content) {
     return content
@@ -729,10 +820,22 @@ export function setIdValueTrans(from, to, content, colList) {
   return name2Id
 }
 
+/**
+ * 检查是否为主画布
+ * @param canvasId - 画布 ID
+ * @returns 是否为主画布
+ */
 export function isMainCanvas(canvasId) {
   return canvasId === 'canvas-main'
 }
-// 检查是否可以加入到分组
+
+/**
+ * 检查是否可以加入到分组
+ * @param item - 组件对象
+ * @returns 是否可以加入分组
+ *
+ * 标签页内的分组不能再加入分组
+ */
 export function checkJoinGroup(item) {
   if (item.component === 'DeTabs') {
     let result = true
@@ -748,7 +851,14 @@ export function checkJoinGroup(item) {
     return true
   }
 }
-// 检查是否可以移入tab
+
+/**
+ * 检查是否可以移入标签页
+ * @param item - 组件对象
+ * @returns 是否可以移入标签页
+ *
+ * 分组内的标签页不能再移入标签页
+ */
 export function checkJoinTab(item) {
   if (item.component === 'Group') {
     let result = true
@@ -763,7 +873,14 @@ export function checkJoinTab(item) {
   }
 }
 
-// 目前仅允许group中还有一层Tab 或者 Tab中含有一层group
+/**
+ * 检查组件画布路径
+ * @param item - 组件对象
+ * @param checkType - 检查类型
+ * @returns 是否符合条件
+ *
+ * 目前仅允许 group 中还有一层 Tab 或者 Tab 中含有一层 group
+ */
 export function itemCanvasPathCheck(item, checkType) {
   if (checkType === 'canvas-main') {
     return isMainCanvas(item.canvasId)

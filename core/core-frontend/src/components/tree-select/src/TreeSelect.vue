@@ -1,22 +1,85 @@
+<!--
+/**
+ * 树形选择器组件 (TreeSelect)
+ *
+ * ==================== 组件概述 ====================
+ * 支持懒加载和搜索的树形选择器组件，提供：
+ * 1. 异步懒加载树节点
+ * 2. 节点搜索过滤功能
+ * 3. 可自定义宽度
+ * 4. 支持组织结构等层级数据展示
+ *
+ * ==================== 主要功能 ====================
+ * 1. 懒加载
+ *    - 按需加载子节点数据
+ *    - 支持异步数据获取
+ *    - 自动识别叶子节点
+ *
+ * 2. 搜索过滤
+ *    - 实时搜索节点
+ *    - 支持模糊匹配
+ *
+ * 3. 数据结构
+ *    - 基于 Element Plus Tree 组件
+ *    - 支持 hasChildren 判断是否有子节点
+ *
+ * ==================== Props 参数 ====================
+ * @param {String} width - 组件宽度，默认 '200px'
+ *
+ * ==================== 数据结构 ====================
+ * interface Tree {
+ *   deptId: number          // 部门 ID
+ *   pid: number             // 父级 ID
+ *   value?: number          // 值
+ *   subCount: number        // 子节点数量
+ *   name: string            // 显示名称
+ *   deptSort: number        // 排序
+ *   createTime: number      // 创建时间
+ *   updateTime: number      // 更新时间
+ *   hasChildren: boolean    // 是否有子节点
+ *   leaf: boolean           // 是否为叶子节点
+ *   top: boolean            // 是否为顶级节点
+ * }
+ *
+ * ==================== 使用示例 ====================
+ * <template>
+ *   <TreeSelect width="300px" />
+ * </template>
+ *
+ * <script setup>
+ * import TreeSelect from '@/components/tree-select/src/TreeSelect.vue'
+ * </script>
+ *
+ * ==================== 注意事项 ====================
+ * - 当前组件包含模拟数据，实际使用时需要替换为真实 API
+ * - 懒加载逻辑在 loadNode 方法中实现
+ * - 过滤逻辑在 filterNodeMethod 方法中实现
+ */
+-->
 <script lang="ts" setup>
 import { ref } from 'vue'
 import type Node from 'element-plus-secondary/es/components/tree/src/model/node'
 import { propTypes } from '@/utils/propTypes'
+
+/**
+ * 树节点数据结构接口
+ */
 interface Tree {
-  deptId: number
-  pid: number
-  value?: number
-  subCount: number
-  name: string
-  deptSort: number
-  createBy?: string
-  updateBy?: string
-  createTime: number
-  updateTime: number
-  hasChildren: boolean
-  leaf: boolean
-  top: boolean
+  deptId: number // 部门 ID
+  pid: number // 父级 ID
+  value?: number // 值
+  subCount: number // 子节点数量
+  name: string // 显示名称
+  deptSort: number // 排序
+  createBy?: string // 创建人
+  updateBy?: string // 更新人
+  createTime: number // 创建时间
+  updateTime: number // 更新时间
+  hasChildren: boolean // 是否有子节点
+  leaf: boolean // 是否为叶子节点
+  top: boolean // 是否为顶级节点
 }
+
 const tree = ref()
 const currentSelect = ref()
 

@@ -1,3 +1,88 @@
+<!--
+/**
+ * 画布核心组件 (CanvasCore)
+ *
+ * ==================== 组件概述 ====================
+ * 这是 DataEase 数据可视化系统的核心画布组件，负责：
+ * 1. 组件拖拽、缩放、移动的矩阵布局管理
+ * 2. 仪表板模式的网格布局
+ * 3. 组件的选中、批量操作、右键菜单
+ * 4. 画布缩放、水印显示
+ * 5. 组件间联动和跳转配置
+ *
+ * ==================== 支持的模式 ====================
+ * - dataV: 数据可视化大屏模式（自由定位）
+ * - dashboard: 仪表板模式（矩阵网格布局）
+ *
+ * ==================== 主要功能 ====================
+ * 1. 矩阵布局系统
+ *    - 自动计算组件在网格中的位置
+ *    - 组件拖拽时自动调整其他组件位置
+ *    - 支持组件的合并和拆分
+ *
+ * 2. 组件操作
+ *    - 拖拽移动组件
+ *    - 调整组件大小
+ *    - 框选多个组件进行批量操作
+ *    - 右键菜单操作
+ *
+ * 3. 辅助功能
+ *    - 网格线显示
+ *    - 辅助对齐线
+ *    - 水印显示
+ *    - 弹窗区域管理
+ *
+ * ==================== Props 参数 ====================
+ * @param {String} themes - 主题：'dark' | 'light'
+ * @param {Boolean} isEdit - 是否为编辑模式
+ * @param {Object} canvasStyleData - 画布样式配置
+ * @param {Array} componentData - 组件数据列表
+ * @param {Array} popComponentData - 弹窗组件数据
+ * @param {Object} canvasViewInfo - 画布视图信息
+ * @param {String} canvasId - 画布 ID，默认 'canvas-main'
+ * @param {String} dvModel - 可视化模型：'dv' | 'dashboard'
+ * @param {Number} baseWidth - 基础单元格宽度（像素）
+ * @param {Number} baseHeight - 基础单元格高度（像素）
+ * @param {Number} baseMarginLeft - 左边距
+ * @param {Number} baseMarginTop - 上边距
+ * @param {Boolean} draggable - 是否可拖拽
+ * @param {Boolean} resizable - 是否可调整大小
+ * @param {Number} scale - 缩放比例
+ * @param {Boolean} canvasActive - 画布是否激活
+ * @param {String} fontFamily - 字体族
+ *
+ * ==================== 使用示例 ====================
+ * <template>
+ *   <CanvasCore
+ *     :canvas-style-data="canvasStyleData"
+ *     :component-data="componentData"
+ *     :canvas-view-info="canvasViewInfo"
+ *     :is-edit="true"
+ *     :base-width="100"
+ *     :base-height="50"
+ *     canvas-id="canvas-main"
+ *     dv-model="dv"
+ *   />
+ * </template>
+ *
+ * ==================== 暴露的方法 ====================
+ * - canvasSizeInit(): 初始化画布尺寸
+ * - canvasInit(): 初始化画布
+ * - addItemBox(item): 添加组件到画布
+ * - handleDragOver(event): 处理拖拽悬停
+ * - getMoveItem(): 获取当前移动的组件
+ * - watermarkUpdate(): 更新水印
+ *
+ * ==================== 事件总线 ====================
+ * - handleDragStartMoveIn-{canvasId}: 开始拖拽组件移入
+ * - handleDragEnd-{canvasId}: 结束拖拽
+ * - hideArea-{canvasId}: 隐藏选中区域
+ * - removeMatrixItem-{canvasId}: 删除矩阵项
+ * - addDashboardItem-{canvasId}: 添加仪表板项
+ * - snapshotChange-{canvasId}: 快照变化
+ * - doCanvasInit-{canvasId}: 执行画布初始化
+ */
+-->
 <script setup lang="ts">
 import Shape from './Shape.vue'
 import { useEmitt } from '@/hooks/web/useEmitt'

@@ -1,3 +1,81 @@
+<!--
+/**
+ * 组件包装器组件 (Shape)
+ *
+ * ==================== 组件概述 ====================
+ * 用于包装画布中的每一个组件，提供以下功能：
+ * 1. 组件选中状态管理
+ * 2. 组件拖拽和调整大小
+ * 3. 组件锁定/隐藏
+ * 4. 批量操作支持
+ * 5. Tab 组件移动检测
+ * 6. 联动配置状态显示
+ *
+ * ==================== 主要功能 ====================
+ * 1. 选中交互
+ *    - 点击选中组件
+ *    - 双击进入编辑模式
+ *    - 显示 8 个调整大小的控制点
+ *
+ * 2. 编辑栏
+ *    - 组件操作按钮（复制、删除、图层等）
+ *    - 视图放大
+ *    - 数据集参数配置
+ *    - 联动和跳转配置
+ *
+ * 3. 状态指示
+ *    - 锁定状态：不可编辑
+ *    - 隐藏状态：在仪表板中隐藏
+ *    - 批量选中：多个组件操作
+ *    - 碰撞检测：Tab 移动时的碰撞提示
+ *
+ * 4. 样式控制
+ *    - 组件背景色
+ *    - 边框样式
+ *    - 旋转角度
+ *    - 透明度
+ *
+ * ==================== Props 参数 ====================
+ * @param {Object} element - 组件数据对象
+ * @param {Object} defaultStyle - 默认样式
+ * @param {Object} baseCellInfo - 基础单元格信息
+ * @param {Number} index - 组件索引
+ * @param {Boolean} isTabMoveCheck - 是否检测 Tab 移动
+ * @param {String} canvasId - 画布 ID
+ * @param {Number} scale - 缩放比例
+ * @param {Boolean} canvasActive - 画布是否激活
+ * @param {String} showPosition - 显示位置：'edit' | 'preview' | 'batchOpt'
+ *
+ * ==================== Events 事件 ====================
+ * @event onStartResize - 开始调整大小
+ * @event onStartMove - 开始移动
+ * @event onMouseUp - 鼠标抬起
+ * @event onDragging - 拖拽中
+ * @event onResizing - 调整大小中
+ * @event userViewEnlargeOpen - 打开视图放大
+ * @event datasetParamsInit - 初始化数据集参数
+ * @event linkJumpSetOpen - 打开跳转配置
+ * @event linkageSetOpen - 打开联动配置
+ *
+ * ==================== Slots 插槽 ====================
+ * @slot default - 组件内容插槽
+ *
+ * ==================== 使用示例 ====================
+ * <Shape
+ *   :element="componentData"
+ *   :default-style="componentData.style"
+ *   :index="index"
+ *   :base-cell-info="baseCellInfo"
+ *   :canvas-id="'canvas-main'"
+ *   :scale="curScale"
+ *   :show-position="'edit'"
+ *   @onStartResize="handleResize"
+ *   @onStartMove="handleMove"
+ * >
+ *   <component :is="componentType" v-bind="componentProps" />
+ * </Shape>
+ */
+-->
 <template>
   <div
     class="shape"

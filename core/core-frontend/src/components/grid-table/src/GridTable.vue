@@ -1,3 +1,105 @@
+<!--
+/**
+ * 表格组件 (GridTable)
+ *
+ * ==================== 组件概述 ====================
+ * 基于 Element Plus Table 的二次封装表格组件，提供以下增强功能：
+ * 1. 跨页选中记忆功能
+ * 2. 自定义空状态展示
+ * 3. 统一的分页配置
+ * 4. 支持搜索空状态
+ * 5. 完整的事件透传
+ *
+ * ==================== 主要功能 ====================
+ * 1. 选中记忆
+ *    - 跨页面保持选中状态
+ *    - 支持自定义标识字段（默认 id）
+ *    - 提供 API 操作选中状态
+ *
+ * 2. 空状态
+ *    - 无数据时的空状态展示
+ *    - 区分搜索无数据和表格无数据
+ *    - 可自定义空状态文案和图片
+ *
+ * 3. 分页
+ *    - 统一的分页样式和配置
+ *    - 支持自定义每页显示数量
+ *    - 可隐藏分页器
+ *
+ * 4. 事件透传
+ *    - 自动透传 ElTable 的所有事件
+ *    - 自动透传 ElTable 的所有属性
+ *
+ * ==================== Props 参数 ====================
+ * @param {Array} columns - 列配置数组
+ * @param {Boolean} isSearch - 是否为搜索模式（影响空状态显示）
+ * @param {Boolean} showPagination - 是否显示分页，默认 true
+ * @param {Array} multipleSelection - 默认选中的行数组
+ * @param {Object} pagination - 分页配置对象
+ *   - currentPage: 当前页码
+ *   - pageSize: 每页显示数量
+ *   - pageSizes: 每页显示数量选项
+ *   - total: 总条数
+ *   - layout: 分页组件布局
+ * @param {Boolean} isRememberSelected - 是否跨页记忆选中，默认 false
+ * @param {String} selectedFlags - 选中标识字段名，默认 'id'
+ * @param {Array} tableData - 表格数据
+ * @param {String} emptyDesc - 空状态描述文案
+ * @param {String} emptyImg - 空状态图片类型
+ * @param {Boolean} border - 是否显示纵向边框，默认 false
+ * @param {Boolean} showEmptyImg - 是否显示空状态图片，默认 true
+ * @param {Boolean} dataLoading - 数据加载状态，默认 false
+ *
+ * ==================== 暴露的方法 ====================
+ * - toggleRowSelection(row): 切换某一行的选中状态
+ * - toggleAllSelection(): 切换所有行的选中状态
+ * - clearSelection(): 清除选中状态
+ *
+ * ==================== Events 事件 ====================
+ * 组件自动透传 ElTable 和 ElPagination 的所有事件：
+ * @event selection-change - 选中项变化
+ * @event size-change - 每页显示数量变化
+ * @event current-change - 当前页变化
+ * @event sort-change - 排序变化
+ * @event filter-change - 筛选变化
+ * ... 以及 ElTable 的所有其他事件
+ *
+ * ==================== Slots 插槽 ====================
+ * @slot empty - 自定义空状态内容
+ * 其他插槽透传给 ElTable
+ *
+ * ==================== 使用示例 ====================
+ * <template>
+ *   <GridTable
+ *     v-loading="loading"
+ *     :table-data="tableData"
+ *     :columns="columns"
+ *     :pagination="pagination"
+ *     :is-remember-selected="true"
+ *     @selection-change="handleSelectionChange"
+ *     @current-change="handlePageChange"
+ *   >
+ *     <el-table-column prop="name" label="名称" />
+ *     <el-table-column prop="code" label="编码" />
+ *   </GridTable>
+ * </template>
+ *
+ * <script setup>
+ * const tableData = ref([
+ *   { id: 1, name: '项目A', code: 'A001' },
+ *   { id: 2, name: '项目B', code: 'A002' }
+ * ])
+ *
+ * const pagination = reactive({
+ *   currentPage: 1,
+ *   pageSize: 10,
+ *   total: 100
+ * })
+ *
+ * const columns = ['name', 'code']
+ * </script>
+ */
+-->
 <script lang="ts" setup>
 import { reactive, ref, computed, watch, nextTick, onBeforeMount, useAttrs } from 'vue'
 import { ElTable, ElPagination } from 'element-plus-secondary'
