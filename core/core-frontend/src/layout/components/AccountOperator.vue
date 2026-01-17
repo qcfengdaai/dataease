@@ -178,6 +178,11 @@ if (uid.value === '1') {
 
   <AboutPage />
   <XpackComponent jsname="dWNlbnRlci1oYW5kbGVy" @loaded="xpackLinkLoaded" />
+  <XpackComponent
+    v-if="uid === '1'"
+    jsname="c2V0dGluZy9zZXR0aW5nLWhhbmRsZXI="
+    @loaded="linkLoaded"
+  />
 </template>
 
 <style lang="less">

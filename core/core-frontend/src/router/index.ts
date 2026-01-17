@@ -177,6 +177,50 @@ export const routes: AppRouteRecordRaw[] = [
       }
     ]
   },
+  // {
+  //   path: '/system',
+  //   name: 'system',
+  //   component: () => import('@/layout/index.vue'),
+  //   hidden: true,
+  //   meta: {},
+  //   children: [
+  //     {
+  //       path: 'user',
+  //       name: 'user',
+  //       hidden: true,
+  //       component: () => import('@/views/system/user/index.vue'),
+  //       meta: { hidden: true }
+  //     },
+  //     {
+  //       path: 'auth',
+  //       name: 'auth',
+  //       hidden: true,
+  //       component: () => import('@/views/system/auth/index.vue'),
+  //       meta: { hidden: true }
+  //     },
+  //     {
+  //       path: 'font',
+  //       name: 'font',
+  //       hidden: true,
+  //       component: () => import('@/views/system/font/index.vue'),
+  //       meta: { hidden: true }
+  //     },
+  //     {
+  //       path: 'organization',
+  //       name: 'organization',
+  //       hidden: true,
+  //       component: () => import('@/views/system/organization/index.vue'),
+  //       meta: { hidden: true }
+  //     },
+  //     {
+  //       path: 'parameter',
+  //       name: 'parameter',
+  //       hidden: true,
+  //       component: () => import('@/views/system/parameter/index.vue'),
+  //       meta: { hidden: true }
+  //     }
+  //   ]
+  // },
   // ==================== 图表视图路由 ====================
   {
     path: '/chart-view',

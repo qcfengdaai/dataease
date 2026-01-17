@@ -11,7 +11,7 @@ const { push, resolve } = useRouter()
 const redirectUser = () => {
   const sysMenu = resolve('/system')
   const kidPath = sysMenu.matched[0].children[0].path
-  push(`${sysMenu.path}/${kidPath}`)
+  push(`${sysMenu.path || 'system'}/${kidPath || 'parameter'}`)
 }
 </script>
 

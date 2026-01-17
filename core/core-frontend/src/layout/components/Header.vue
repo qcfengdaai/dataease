@@ -204,7 +204,7 @@ onMounted(() => {
         </el-badge>
       </el-tooltip>
 
-      <SystemCfg v-if="showSystem" />
+      <SystemCfg />
       <AccountOperator />
       <ai-component
         v-if="aiBaseUrl && appearanceStore.getShowAi"

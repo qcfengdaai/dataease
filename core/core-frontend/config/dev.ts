@@ -65,7 +65,7 @@ export default {
        * // http://192.168.17.31:8100/de2api/user/list
        */
       '/api': {
-        target: 'http://192.168.17.31:8100', // 后端服务器地址（请根据实际环境修改）
+        target: 'http://192.168.17.30:8100', // 后端服务器地址（请根据实际环境修改）
         changeOrigin: true, // 改变请求源（处理跨域）
         rewrite: path => path.replace(/^\/api/, 'de2api') // 路径重写：/api -> de2api
       }
